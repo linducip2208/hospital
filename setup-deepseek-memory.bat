@@ -1,18 +1,18 @@
 @ECHO OFF
-TITLE DeepSeek - Configurar Memória 8GB
+TITLE DeepSeek - Configurar Memória 16GB
 ECHO ========================================
 ECHO  Configurando ambiente para DeepSeek
 ECHO ========================================
 ECHO.
 
-:: Aumentar pagefile do Windows para 8GB
-ECHO [1/3] Aumentando pagefile do Windows para 8GB...
+:: Aumentar pagefile do Windows para 16GB
+ECHO [1/3] Aumentando pagefile do Windows para 16GB...
 wmic computersystem where name="%COMPUTERNAME%" set AutomaticManagedPagefile=False
-wmic pagefileset where name="C:\\pagefile.sys" set InitialSize=8192,MaximumSize=8192
-ECHO OK - Pagefile configurado para 8GB
+wmic pagefileset where name="C:\\pagefile.sys" set InitialSize=16384,MaximumSize=16384
+ECHO OK - Pagefile configurado para 16GB
 ECHO.
 
-:: Configurar Node.js para usar até 8GB de heap (já está no deepseek-ram.cmd)
+:: Configurar Node.js para usar até 16GB de heap
 ECHO [2/3] Verificando script deepseek-ram.cmd...
 IF EXIST deepseek-ram.cmd (
     ECHO OK - deepseek-ram.cmd ja existe
@@ -20,8 +20,8 @@ IF EXIST deepseek-ram.cmd (
     ECHO Criando deepseek-ram.cmd...
     (
         ECHO @ECHO off
-        ECHO SET NODE_OPTIONS=--max-old-space-size=8192
-        ECHO ECHO Memory limit: 8GB
+        ECHO SET NODE_OPTIONS=--max-old-space-size=16384
+        ECHO ECHO Memory limit: 16GB
         ECHO ECHO Starting DeepSeek Code...
         ECHO ECHO.
         ECHO deepseek

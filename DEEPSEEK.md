@@ -73,11 +73,12 @@ The current local environment is using MySQL and migrations were successfully ap
 
 ## DeepSeek Memory Configuration
 
-- User-level environment variable `NODE_OPTIONS=--max-old-space-size=8192` is set permanently via Windows `setx`.
-- This means every DeepSeek session and any Node.js process automatically gets an 8 GB heap limit.
+- **RAM total: 16 GB** — `NODE_OPTIONS=--max-old-space-size=16384`
+- User-level environment variable `NODE_OPTIONS=--max-old-space-size=16384` is set permanently via Windows `setx`.
+- This means every DeepSeek session and any Node.js process automatically gets a **16 GB** heap limit.
 - To verify: `reg query "HKCU\Environment" /v NODE_OPTIONS`
-- The script `deepseek-ram.cmd` also exists locally as a manual launcher.
-- A helper script `setup-deepseek-memory.bat` can increase the Windows pagefile to 8 GB (requires admin).
+- The script `deepseek-ram.cmd` also exists locally as a manual launcher (sets 16 GB).
+- A helper script `setup-deepseek-memory.bat` can increase the Windows pagefile to **16 GB** (requires admin).
 
 ## Application Structure
 
@@ -111,3 +112,35 @@ The current local environment is using MySQL and migrations were successfully ap
 - Fixed Payment status enum via migration
 - Added softDeletes to medical_records migration
 - Updated Appointment casts (time columns) and relationship (HasOne)
+
+## Database Schema & Fixes
+
+## Database Rename Migration (2026_04_30_150000)
+
+Applied the following changes to align database columns with application code:
+
+### medical_records
+- `treatment_notes` → `action`
+- `prescription` → `medicine`
+- `follow_up` → `notes`
+
+### payments
+- `total` → `amount`
+- `payment_method` enum now supports: `cash, transfer, debit, credit, qris, card, insurance, other`
+- `status` enum: `pending, completed, cancelled, refunded`
+
+### New Indexes
+- `medical_records.appointment_id` (idx_medical_records_appointment_id)
+- `payments.patient_id` (idx_payments_patient_id)
+- `payments.appointment_id` (idx_payments_appointment_id)
+
+### Removed
+- All Attribute accessors from MedicalRecord (`action`, `medicine`, `notes`) and Payment (`amount`) — no longer needed since DB columns now match field names
+
+### Added
+- User model: `hasOne(Patient)`, `hasOne(Doctor)` relations
+
+### Controller Fixes
+- Web PaymentController: payment_method validated against full enum list, uses sequential invoice number (INV/YYYY/MM/XXXXX), explicitly sets discount=0, tax=0
+- API PaymentController: status enum fixed to `pending,completed,cancelled,refunded`, amount column name updated
+- API MedicalRecordController: field names `action`/`medicine`/`notes` (consistent with web controller)
