@@ -78,3 +78,36 @@ The current local environment is using MySQL and migrations were successfully ap
 - To verify: `reg query "HKCU\Environment" /v NODE_OPTIONS`
 - The script `deepseek-ram.cmd` also exists locally as a manual launcher.
 - A helper script `setup-deepseek-memory.bat` can increase the Windows pagefile to 8 GB (requires admin).
+
+## Application Structure
+
+## Hospital App — Complete CRUD Structure
+
+### Resources (Full CRUD)
+- **Patients** — `PatientController`, `patients/*.blade.php`
+- **Doctors** — `DoctorController`, `doctors/*.blade.php`
+- **Treatments** — `TreatmentController`, `treatments/*.blade.php`
+- **Appointments** — `AppointmentController`, `appointments/*.blade.php`
+- **Medical Records** — `MedicalRecordController`, `medical-records/*.blade.php`
+- **Payments** — `PaymentController`, `payments/*.blade.php`
+
+### Admin Layout
+- `resources/views/layouts/admin.blade.php` — Bootstrap 5 sidebar layout with nav links for all resources
+- All resource views extend `layouts.admin`
+
+### Model Field Mappings
+- **MedicalRecord**: `action` ↔ `treatment_notes`, `medicine` ↔ `prescription`, `notes` ↔ `follow_up` (via Attribute accessors/mutators)
+- **Payment**: `amount` ↔ `total` (via Attribute accessor/mutator), auto-generates `invoice_number` on create
+- **Appointment**: `medicalRecord()` is `HasOne` (not HasMany), `start_time`/`end_time` cast as `datetime:H:i`
+
+### Payment Status Values
+`pending`, `completed`, `cancelled`, `refunded`
+
+### Fixes Applied (this session)
+- Created missing `layouts/admin.blade.php`
+- Fixed `\` → `$` syntax in all broken blade views
+- Added MedicalRecord field accessors for `action`/`medicine`/`notes`
+- Added Payment `amount` accessor, auto-invoice, auto-patient_id
+- Fixed Payment status enum via migration
+- Added softDeletes to medical_records migration
+- Updated Appointment casts (time columns) and relationship (HasOne)

@@ -37,11 +37,11 @@ class MedicalRecordController extends Controller
             'doctor_id' => 'required|exists:doctors,id',
             'appointment_id' => 'nullable|exists:appointments,id',
             'diagnosis' => 'nullable|string',
-            'treatment_notes' => 'nullable|string',
-            'prescription' => 'nullable|string',
+            'action' => 'nullable|string',
+            'medicine' => 'nullable|string',
             'vital_signs' => 'nullable|array',
             'lab_results' => 'nullable|string',
-            'follow_up' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $record = MedicalRecord::create($validated);
@@ -63,11 +63,11 @@ class MedicalRecordController extends Controller
             'doctor_id' => 'sometimes|exists:doctors,id',
             'appointment_id' => 'nullable|exists:appointments,id',
             'diagnosis' => 'nullable|string',
-            'treatment_notes' => 'nullable|string',
-            'prescription' => 'nullable|string',
+            'action' => 'nullable|string',
+            'medicine' => 'nullable|string',
             'vital_signs' => 'nullable|array',
             'lab_results' => 'nullable|string',
-            'follow_up' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $medicalRecord->update($validated);

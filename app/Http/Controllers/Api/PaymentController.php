@@ -48,15 +48,15 @@ class PaymentController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
-            'payment_method' => 'nullable|in:cash,transfer,card,insurance,other',
-            'status' => 'nullable|in:pending,paid,partial,refunded,cancelled',
+            'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
+            'status' => 'nullable|in:pending,completed,cancelled,refunded',
             'notes' => 'nullable|string',
         ]);
 
         $validated['discount'] ??= 0;
         $validated['tax'] ??= 0;
-        $validated['total'] = $validated['subtotal'] - $validated['discount'] + $validated['tax'];
-        $validated['change_amount'] = max(0, $validated['paid_amount'] - $validated['total']);
+        $validated['amount'] = $validated['subtotal'] - $validated['discount'] + $validated['tax'];
+        $validated['change_amount'] = max(0, $validated['paid_amount'] - $validated['amount']);
         $validated['invoice_number'] = $this->generateInvoiceNumber();
 
         $payment = Payment::create($validated);
@@ -80,8 +80,8 @@ class PaymentController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'sometimes|numeric|min:0',
-            'payment_method' => 'nullable|in:cash,transfer,card,insurance,other',
-            'status' => 'nullable|in:pending,paid,partial,refunded,cancelled',
+            'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
+            'status' => 'nullable|in:pending,completed,cancelled,refunded',
             'notes' => 'nullable|string',
         ]);
 
@@ -91,8 +91,8 @@ class PaymentController extends Controller
             $tax = $validated['tax'] ?? $payment->tax;
             $paidAmount = $validated['paid_amount'] ?? $payment->paid_amount;
 
-            $validated['total'] = $subtotal - $discount + $tax;
-            $validated['change_amount'] = max(0, $paidAmount - $validated['total']);
+            $validated['amount'] = $subtotal - $discount + $tax;
+            $validated['change_amount'] = max(0, $paidAmount - $validated['amount']);
         }
 
         $payment->update($validated);

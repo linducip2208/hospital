@@ -38,7 +38,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'appointment_id' => 'required|exists:appointments,id',
             'amount' => 'required|numeric|min:0',
-            'payment_method' => 'nullable|string|max:50',
+            'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
             'status' => 'required|in:pending,completed,cancelled,refunded',
             'notes' => 'nullable|string',
         ]);
@@ -46,9 +46,10 @@ class PaymentController extends Controller
         $appointment = Appointment::findOrFail($validated['appointment_id']);
 
         $validated['patient_id'] = $appointment->patient_id;
-        $validated['invoice_number'] = 'INV-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
+        $validated['invoice_number'] = $this->generateInvoiceNumber();
         $validated['subtotal'] = $validated['amount'];
-        $validated['total'] = $validated['amount'];
+        $validated['discount'] = 0;
+        $validated['tax'] = 0;
         $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
         $validated['change_amount'] = 0;
 
@@ -73,7 +74,7 @@ class PaymentController extends Controller
         $validated = $request->validate([
             'appointment_id' => 'required|exists:appointments,id',
             'amount' => 'required|numeric|min:0',
-            'payment_method' => 'nullable|string|max:50',
+            'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
             'status' => 'required|in:pending,completed,cancelled,refunded',
             'notes' => 'nullable|string',
         ]);
@@ -82,7 +83,8 @@ class PaymentController extends Controller
 
         $validated['patient_id'] = $appointment->patient_id;
         $validated['subtotal'] = $validated['amount'];
-        $validated['total'] = $validated['amount'];
+        $validated['discount'] = 0;
+        $validated['tax'] = 0;
         $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
         $validated['change_amount'] = 0;
 
@@ -94,5 +96,17 @@ class PaymentController extends Controller
     {
         $payment->delete();
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dihapus.');
+    }
+
+    private function generateInvoiceNumber(): string
+    {
+        $prefix = 'INV/' . now()->format('Y/m');
+        $last = Payment::where('invoice_number', 'like', $prefix . '/%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $next = $last ? (int) Str::afterLast($last->invoice_number, '/') + 1 : 1;
+
+        return $prefix . '/' . str_pad($next, 5, '0', STR_PAD_LEFT);
     }
 }
