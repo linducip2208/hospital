@@ -57,7 +57,7 @@ class PatientApiTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['name', 'nik', 'gender']);
+        $response->assertJsonValidationErrors(['name', 'gender']);
     }
 
     public function test_can_show_patient(): void

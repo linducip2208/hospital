@@ -32,9 +32,12 @@ return new class extends Migration
         // ----------------------------------------------------------------
         // 3. Fix payment_method enum: add debit, credit, qris, remove other
         // ----------------------------------------------------------------
-        DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM(
-            'cash','transfer','debit','credit','qris','card','insurance','other'
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'cash'");
+        // SQLite (used in testing) does not support MODIFY COLUMN or ENUM
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM(
+                'cash','transfer','debit','credit','qris','card','insurance','other'
+            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'cash'");
+        }
 
         // ----------------------------------------------------------------
         // 4. Add missing indexes
@@ -64,10 +67,12 @@ return new class extends Migration
             $table->dropIndex('idx_medical_records_appointment_id');
         });
 
-        // Restore payment_method enum to original
-        DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM(
-            'cash','transfer','card','insurance','other'
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'cash'");
+        // Restore payment_method enum to original (MySQL only)
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE payments MODIFY COLUMN payment_method ENUM(
+                'cash','transfer','card','insurance','other'
+            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'cash'");
+        }
 
         // Rename back
         Schema::table('payments', function (Blueprint $table) {

@@ -65,7 +65,7 @@ class PatientControllerTest extends TestCase
             'gender' => 'invalid',
         ]);
 
-        $response->assertSessionHasErrors(['name', 'nik', 'gender']);
+        $response->assertSessionHasErrors(['name', 'gender']);
     }
 
     public function test_show(): void

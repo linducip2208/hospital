@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TreatmentController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('auth')->name('api.')->group(function () {
     Route::apiResource('patients', PatientController::class);
     Route::apiResource('doctors', DoctorController::class);
     Route::apiResource('treatments', TreatmentController::class);
