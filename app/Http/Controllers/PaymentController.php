@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Appointment;
+use App\Models\Payment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
+class PaymentController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $query = Payment::with(['appointment.patient']);
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+        if ($search = $request->get('search')) {
+            $query->whereHas('appointment.patient', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+        $payments = $query->latest()->paginate(15);
+        return view('payments.index', compact('payments'));
+    }
+
+    public function create(): View
+    {
+        $appointments = Appointment::with('patient')
+            ->whereIn('status', ['completed', 'in_progress', 'confirmed'])
+            ->orderBy('appointment_date', 'desc')
+            ->get();
+        return view('payments.create', compact('appointments'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'nullable|string|max:50',
+            'status' => 'required|in:pending,completed,cancelled,refunded',
+            'notes' => 'nullable|string',
+        ]);
+
+        $appointment = Appointment::findOrFail($validated['appointment_id']);
+
+        $validated['patient_id'] = $appointment->patient_id;
+        $validated['invoice_number'] = 'INV-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
+        $validated['subtotal'] = $validated['amount'];
+        $validated['total'] = $validated['amount'];
+        $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
+        $validated['change_amount'] = 0;
+
+        Payment::create($validated);
+        return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dicatat.');
+    }
+
+    public function show(Payment $payment): View
+    {
+        $payment->load(['appointment.patient', 'appointment.doctor', 'appointment.treatment']);
+        return view('payments.show', compact('payment'));
+    }
+
+    public function edit(Payment $payment): View
+    {
+        $appointments = Appointment::with('patient')->orderBy('appointment_date', 'desc')->get();
+        return view('payments.edit', compact('payment', 'appointments'));
+    }
+
+    public function update(Request $request, Payment $payment): RedirectResponse
+    {
+        $validated = $request->validate([
+            'appointment_id' => 'required|exists:appointments,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'nullable|string|max:50',
+            'status' => 'required|in:pending,completed,cancelled,refunded',
+            'notes' => 'nullable|string',
+        ]);
+
+        $appointment = Appointment::findOrFail($validated['appointment_id']);
+
+        $validated['patient_id'] = $appointment->patient_id;
+        $validated['subtotal'] = $validated['amount'];
+        $validated['total'] = $validated['amount'];
+        $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
+        $validated['change_amount'] = 0;
+
+        $payment->update($validated);
+        return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil diperbarui.');
+    }
+
+    public function destroy(Payment $payment): RedirectResponse
+    {
+        $payment->delete();
+        return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dihapus.');
+    }
+}

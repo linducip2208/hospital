@@ -1,0 +1,21 @@
+<?php
+
+use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\DoctorController;
+use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\TreatmentController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')->group(function () {
+    Route::apiResource('patients', PatientController::class);
+    Route::apiResource('doctors', DoctorController::class);
+    Route::apiResource('treatments', TreatmentController::class);
+
+    Route::get('appointments/calendar', [AppointmentController::class, 'calendar']);
+    Route::apiResource('appointments', AppointmentController::class);
+
+    Route::apiResource('medical-records', MedicalRecordController::class);
+    Route::apiResource('payments', PaymentController::class);
+});
