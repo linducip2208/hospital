@@ -31,7 +31,7 @@
                 <tbody>
                     @forelse($records as $record)
                     <tr>
-                        <td>{{ $record->iteration + ($record->currentPage() - 1) * $record->perPage() }}</td>
+                        <td>{{ $loop->iteration + ($records->currentPage() - 1) * $records->perPage() }}</td>
                         <td><a href="{{ route('patients.show', $record->patient) }}">{{ $record->patient->name ?? '-' }}</a></td>
                         <td>{{ $record->doctor->name ?? '-' }}</td>
                         <td>{{ Str::limit($record->diagnosis, 40) }}</td>

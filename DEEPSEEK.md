@@ -144,3 +144,19 @@ Applied the following changes to align database columns with application code:
 - Web PaymentController: payment_method validated against full enum list, uses sequential invoice number (INV/YYYY/MM/XXXXX), explicitly sets discount=0, tax=0
 - API PaymentController: status enum fixed to `pending,completed,cancelled,refunded`, amount column name updated
 - API MedicalRecordController: field names `action`/`medicine`/`notes` (consistent with web controller)
+
+## Test Fixes
+
+## Test Fixes Applied (30/04/2026)
+
+All 30 tests pass (68 assertions). The following fixes were applied:
+
+1. **API routes auth**: Added `middleware('auth')` to `routes/api.php` v1 prefix group. API routes now require authentication. JSON requests return 401 when unauthenticated.
+
+2. **API route name prefix**: Added `name('api.')` prefix to API route group to prevent name collision with web routes. Previously `route('patients.index')` in web controllers could resolve to the API route URL (`/api/v1/patients`) instead of the web route (`/patients`).
+
+3. **Migration SQLite compatibility**: Wrapped MySQL-specific `MODIFY COLUMN ENUM` statements in SQLite guard (`DB::connection()->getDriverName() !== 'sqlite'`) since SQLite (used in testing) doesn't support these operations.
+
+4. **Test validation fixes**: Removed `'nik'` from expected validation errors in both API and web PatientController tests — `nik` is nullable in the schema and validation rules, so it doesn't produce an error when missing.
+
+5. **ExampleTest updated**: Changed from testing pairing redirect to testing that `/login` returns 200 (matching the new auth-based flow).

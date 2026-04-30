@@ -38,8 +38,8 @@ class PaymentFactory extends Factory
             'amount' => $amount,
             'paid_amount' => $paidAmount,
             'change_amount' => $changeAmount,
-            'payment_method' => fake()->randomElement(['cash', 'transfer', 'debit', 'credit', 'qris', 'card', 'insurance', 'other']),
-            'status' => 'completed',
+            'payment_method' => fake()->randomElement(['cash', 'transfer', 'card', 'insurance', 'other']),
+            'status' => 'pending',
             'notes' => fake()->optional(0.3)->sentence(),
         ];
     }
