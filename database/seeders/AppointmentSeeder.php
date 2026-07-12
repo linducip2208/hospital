@@ -62,7 +62,7 @@ class AppointmentSeeder extends Seeder
                     'Kontrol hipertensi',
                 ]),
                 'notes' => fake()->optional(0.3)->sentence(),
-                'reminders' => json_encode([['type' => 'email', 'sent' => false]]),
+                'reminders' => [['type' => 'email', 'sent' => false]],
             ]);
         }
     }

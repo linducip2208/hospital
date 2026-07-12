@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'poli.access' => \App\Http\Middleware\CheckPoliAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

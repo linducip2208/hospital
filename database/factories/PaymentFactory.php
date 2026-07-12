@@ -31,7 +31,7 @@ class PaymentFactory extends Factory
         return [
             'patient_id' => Patient::factory(),
             'appointment_id' => fake()->optional(0.7)->passthrough(Appointment::factory()),
-            'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad(static::$invoiceCounter++, 5, '0', STR_PAD_LEFT),
+            'invoice_number' => 'INV/' . now()->format('Y/m') . '/' . str_pad(static::$invoiceCounter++, 5, '0', STR_PAD_LEFT),
             'subtotal' => $subtotal,
             'discount' => $discount,
             'tax' => $tax,

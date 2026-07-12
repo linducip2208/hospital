@@ -5,8 +5,11 @@ use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SatuSehatWebhookController;
 use App\Http\Controllers\Api\TreatmentController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/satusehat/webhook', [SatuSehatWebhookController::class, 'receive'])->name('satusehat.webhook');
 
 Route::prefix('v1')->middleware('auth')->name('api.')->group(function () {
     Route::apiResource('patients', PatientController::class);

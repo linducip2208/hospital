@@ -17,7 +17,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Pemeriksaan',
                 'price' => 150000,
                 'duration_minutes' => 30,
-                'requirements' => json_encode([]),
+                'requirements' => [],
             ],
             [
                 'name' => 'Konsultasi Spesialis Jantung',
@@ -25,7 +25,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Konsultasi',
                 'price' => 350000,
                 'duration_minutes' => 45,
-                'requirements' => json_encode(['Bawa hasil rekam medis sebelumnya', 'Bawa rujukan dari dokter umum']),
+                'requirements' => ['Bawa hasil rekam medis sebelumnya', 'Bawa rujukan dari dokter umum'],
             ],
             [
                 'name' => 'Konsultasi Spesialis Saraf',
@@ -33,7 +33,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Konsultasi',
                 'price' => 350000,
                 'duration_minutes' => 45,
-                'requirements' => json_encode(['Bawa hasil CT Scan/MRI jika ada', 'Bawa rujukan']),
+                'requirements' => ['Bawa hasil CT Scan/MRI jika ada', 'Bawa rujukan'],
             ],
             [
                 'name' => 'Cek Darah Lengkap',
@@ -41,7 +41,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Laboratorium',
                 'price' => 120000,
                 'duration_minutes' => 15,
-                'requirements' => json_encode(['Puasa 8-10 jam sebelum pengambilan darah']),
+                'requirements' => ['Puasa 8-10 jam sebelum pengambilan darah'],
             ],
             [
                 'name' => 'Cek Urine',
@@ -49,7 +49,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Laboratorium',
                 'price' => 75000,
                 'duration_minutes' => 15,
-                'requirements' => json_encode(['Tampung urine pagi hari', 'Jangan buang urine pertama']),
+                'requirements' => ['Tampung urine pagi hari', 'Jangan buang urine pertama'],
             ],
             [
                 'name' => 'Rontgen Dada',
@@ -57,7 +57,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Radiologi',
                 'price' => 200000,
                 'duration_minutes' => 20,
-                'requirements' => json_encode(['Lepaskan aksesoris logam', 'Gunakan baju khusus']),
+                'requirements' => ['Lepaskan aksesoris logam', 'Gunakan baju khusus'],
             ],
             [
                 'name' => 'USG Abdomen',
@@ -65,7 +65,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Radiologi',
                 'price' => 350000,
                 'duration_minutes' => 30,
-                'requirements' => json_encode(['Puasa 6-8 jam sebelum pemeriksaan']),
+                'requirements' => ['Puasa 6-8 jam sebelum pemeriksaan'],
             ],
             [
                 'name' => 'Operasi Katarak',
@@ -73,7 +73,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Operasi',
                 'price' => 5000000,
                 'duration_minutes' => 60,
-                'requirements' => json_encode(['Konsultasi pra-operasi', 'Cek kesehatan lengkap', 'Puasa 8 jam sebelum operasi']),
+                'requirements' => ['Konsultasi pra-operasi', 'Cek kesehatan lengkap', 'Puasa 8 jam sebelum operasi'],
             ],
             [
                 'name' => 'Operasi Apendisitis',
@@ -81,7 +81,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Operasi',
                 'price' => 8000000,
                 'duration_minutes' => 90,
-                'requirements' => json_encode(['Puasa total 8 jam', 'Konsultasi dokter bedah', 'Cek darah lengkap', 'EKG']),
+                'requirements' => ['Puasa total 8 jam', 'Konsultasi dokter bedah', 'Cek darah lengkap', 'EKG'],
             ],
             [
                 'name' => 'Cuci Darah (Hemodialisis)',
@@ -89,7 +89,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Terapi',
                 'price' => 2000000,
                 'duration_minutes' => 240,
-                'requirements' => json_encode(['Datang 30 menit lebih awal', 'Timbang berat badan', 'Cek tekanan darah']),
+                'requirements' => ['Datang 30 menit lebih awal', 'Timbang berat badan', 'Cek tekanan darah'],
             ],
             [
                 'name' => 'Fisioterapi',
@@ -97,7 +97,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Terapi',
                 'price' => 150000,
                 'duration_minutes' => 45,
-                'requirements' => json_encode(['Bawa pakaian olahraga', 'Bawa rujukan/rekam medis']),
+                'requirements' => ['Bawa pakaian olahraga', 'Bawa rujukan/rekam medis'],
             ],
             [
                 'name' => 'Vaksinasi',
@@ -105,7 +105,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Tindakan',
                 'price' => 250000,
                 'duration_minutes' => 15,
-                'requirements' => json_encode(['Dalam kondisi sehat', 'Bawa buku vaksinasi jika ada']),
+                'requirements' => ['Dalam kondisi sehat', 'Bawa buku vaksinasi jika ada'],
             ],
             [
                 'name' => 'Perawatan Luka',
@@ -113,7 +113,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Tindakan',
                 'price' => 100000,
                 'duration_minutes' => 20,
-                'requirements' => json_encode([]),
+                'requirements' => [],
             ],
             [
                 'name' => 'Rawat Inap Kelas 1',
@@ -121,7 +121,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Rawat Inap',
                 'price' => 500000,
                 'duration_minutes' => 1440,
-                'requirements' => json_encode(['Rujukan rawat inap', 'Identitas diri', 'Deposit awal']),
+                'requirements' => ['Rujukan rawat inap', 'Identitas diri', 'Deposit awal'],
             ],
             [
                 'name' => 'Rawat Inap Kelas 3',
@@ -129,7 +129,7 @@ class TreatmentSeeder extends Seeder
                 'category' => 'Rawat Inap',
                 'price' => 150000,
                 'duration_minutes' => 1440,
-                'requirements' => json_encode(['Rujukan rawat inap', 'Identitas diri', 'Deposit awal']),
+                'requirements' => ['Rujukan rawat inap', 'Identitas diri', 'Deposit awal'],
             ],
         ];
 

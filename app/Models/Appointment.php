@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +12,7 @@ class Appointment extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'treatment_id',
+        'patient_id', 'doctor_id', 'polyclinic_id', 'treatment_id',
         'appointment_date', 'start_time', 'end_time',
         'status', 'complaint', 'notes', 'reminders',
     ];
@@ -41,6 +40,11 @@ class Appointment extends Model
     public function treatment(): BelongsTo
     {
         return $this->belongsTo(Treatment::class);
+    }
+
+    public function polyclinic(): BelongsTo
+    {
+        return $this->belongsTo(Polyclinic::class);
     }
 
     public function medicalRecord(): \Illuminate\Database\Eloquent\Relations\HasOne

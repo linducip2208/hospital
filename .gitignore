@@ -30,3 +30,9 @@ Thumbs.db
 
 # DeepSeek Code session logs
 /.deepseek/logs/
+
+# Local build/archive artifacts
+/hospital.zip
+/sql import/
+/update/
+/.claude/

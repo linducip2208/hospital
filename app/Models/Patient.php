@@ -13,8 +13,8 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'name', 'email', 'phone', 'nik', 'birth_date',
-        'gender', 'address', 'blood_type', 'allergies', 'medical_history',
+        'user_id', 'name', 'email', 'phone', 'nik', 'bpjs_number', 'nik_verified',
+        'birth_date', 'gender', 'address', 'blood_type', 'allergies', 'medical_history',
         'emergency_contact_name', 'emergency_contact_phone', 'notes', 'is_active',
     ];
 
@@ -23,6 +23,7 @@ class Patient extends Model
         return [
             'birth_date' => 'date',
             'is_active' => 'boolean',
+            'nik_verified' => 'boolean',
         ];
     }
 
@@ -45,4 +46,10 @@ class Patient extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function labTests(): HasMany { return $this->hasMany(LabTest::class); }
+    public function radiologies(): HasMany { return $this->hasMany(Radiology::class); }
+    public function maternities(): HasMany { return $this->hasMany(Maternity::class); }
+    public function emergencies(): HasMany { return $this->hasMany(Emergency::class); }
+    public function referrals(): HasMany { return $this->hasMany(Referral::class); }
 }

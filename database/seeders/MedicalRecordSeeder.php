@@ -73,14 +73,14 @@ class MedicalRecordSeeder extends Seeder
                 'diagnosis' => fake()->randomElement($diagnoses),
                 'action' => fake()->randomElement($actions),
                 'medicine' => fake()->randomElement($medicines) . ', ' . fake()->randomElement($medicines),
-                'vital_signs' => json_encode([
+                'vital_signs' => [
                     'blood_pressure' => "$systolic/$diastolic",
                     'heart_rate' => fake()->numberBetween(60, 100),
                     'respiratory_rate' => fake()->numberBetween(12, 24),
                     'temperature' => fake()->randomFloat(1, 36.0, 38.5),
                     'weight' => fake()->numberBetween(45, 90),
                     'height' => fake()->numberBetween(150, 180),
-                ]),
+                ],
                 'lab_results' => fake()->optional(0.5)->sentence(),
                 'notes' => 'Pasien dianjurkan kontrol kembali dalam ' . fake()->randomElement(['1 minggu', '2 minggu', '1 bulan']) . '. ' . fake()->optional(0.3)->sentence(),
             ]);

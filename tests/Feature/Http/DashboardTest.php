@@ -18,7 +18,7 @@ class DashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Dashboard');
-        $response->assertSee('Total Pasien');
+        $response->assertSee('Pasien Hari Ini');
         $response->assertSee('Dokter Aktif');
         $response->assertSee('Appointment Hari Ini');
         $response->assertSee('Pendapatan Bulan Ini');

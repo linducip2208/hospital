@@ -40,6 +40,7 @@ class TreatmentController extends Controller
             'requirements' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['requirements'] = $request->filled('requirements') ? explode("\n", str_replace("\r", "", $request->requirements)) : null;
         Treatment::create($validated);
         return redirect()->route('treatments.index')->with('success', 'Treatment berhasil ditambahkan.');
@@ -68,6 +69,7 @@ class TreatmentController extends Controller
             'requirements' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['requirements'] = $request->filled('requirements') ? explode("\n", str_replace("\r", "", $request->requirements)) : null;
         $treatment->update($validated);
         return redirect()->route('treatments.index')->with('success', 'Treatment berhasil diperbarui.');

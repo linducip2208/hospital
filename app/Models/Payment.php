@@ -12,7 +12,7 @@ class Payment extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id', 'appointment_id', 'invoice_number',
+        'patient_id', 'appointment_id', 'medical_record_id', 'invoice_number',
         'subtotal', 'discount', 'tax', 'amount',
         'paid_amount', 'change_amount', 'payment_method', 'status', 'notes',
     ];
@@ -37,5 +37,10 @@ class Payment extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function medicalRecord(): BelongsTo
+    {
+        return $this->belongsTo(MedicalRecord::class);
     }
 }

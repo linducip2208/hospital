@@ -1,0 +1,13 @@
+@if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
+<div class="row g-3">
+    <div class="col-md-4"><label class="form-label">Pasien *</label><select name="patient_id" class="form-select" required><option value="">— Pilih —</option>@foreach($patients as $p)<option value="{{ $p->id }}" @selected(old('patient_id', $order?->patient_id)==$p->id)>{{ $p->name }}</option>@endforeach</select></div>
+    <div class="col-md-4"><label class="form-label">Dokter</label><select name="doctor_id" class="form-select"><option value="">— Pilih —</option>@foreach($doctors as $d)<option value="{{ $d->id }}" @selected(old('doctor_id', $order?->doctor_id)==$d->id)>{{ $d->name }}</option>@endforeach</select></div>
+    <div class="col-md-4"><label class="form-label">Tgl Order *</label><input type="date" name="order_date" class="form-control" value="{{ old('order_date', $order?->order_date?->format('Y-m-d') ?? now()->format('Y-m-d')) }}" required></div>
+    <div class="col-md-4"><label class="form-label">Jenis Diet *</label><select name="diet_type" class="form-select" required>@foreach($types as $k=>$l)<option value="{{ $k }}" @selected(old('diet_type', $order?->diet_type)===$k)>{{ $l }}</option>@endforeach</select></div>
+    <div class="col-md-4"><label class="form-label">Tekstur</label><input name="texture" class="form-control" value="{{ old('texture', $order?->texture) }}"></div>
+    <div class="col-md-4"><label class="form-label">Kalori (kcal)</label><input type="number" name="calories" class="form-control" value="{{ old('calories', $order?->calories) }}"></div>
+    <div class="col-md-4"><label class="form-label">Mulai *</label><input type="date" name="start_date" class="form-control" value="{{ old('start_date', $order?->start_date?->format('Y-m-d') ?? now()->format('Y-m-d')) }}" required></div>
+    <div class="col-md-4"><label class="form-label">Selesai</label><input type="date" name="end_date" class="form-control" value="{{ old('end_date', $order?->end_date?->format('Y-m-d')) }}"></div>
+    <div class="col-md-4"><label class="form-label">Status</label><select name="status" class="form-select">@foreach(['active'=>'Aktif','paused'=>'Pause','discontinued'=>'Discontinue','completed'=>'Selesai'] as $k=>$l)<option value="{{ $k }}" @selected(old('status', $order?->status ?? 'active')===$k)>{{ $l }}</option>@endforeach</select></div>
+    <div class="col-md-12"><label class="form-label">Instruksi Khusus</label><textarea name="special_instructions" rows="3" class="form-control">{{ old('special_instructions', $order?->special_instructions) }}</textarea></div>
+</div>

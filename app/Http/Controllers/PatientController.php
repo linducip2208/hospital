@@ -31,6 +31,8 @@ class PatientController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'nik' => 'nullable|string|max:20|unique:patients,nik',
+            'bpjs_number' => 'nullable|string|max:20',
+            'nik_verified' => 'boolean',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female',
             'address' => 'nullable|string',
@@ -63,6 +65,8 @@ class PatientController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'nik' => 'nullable|string|max:20|unique:patients,nik,' . $patient->id,
+            'bpjs_number' => 'nullable|string|max:20',
+            'nik_verified' => 'boolean',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female',
             'address' => 'nullable|string',
@@ -81,5 +85,20 @@ class PatientController extends Controller
     {
         $patient->delete();
         return redirect()->route('patients.index')->with('success', 'Pasien berhasil dihapus.');
+    }
+
+    public function printCard(Patient $patient): View
+    {
+        return view('patients.print-card', compact('patient'));
+    }
+
+    public function printWristband(Patient $patient): View
+    {
+        return view('patients.print-wristband', compact('patient'));
+    }
+
+    public function printStickers(Patient $patient): View
+    {
+        return view('patients.print-stickers', compact('patient'));
     }
 }

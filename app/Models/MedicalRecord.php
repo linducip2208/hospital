@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class MedicalRecord extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'appointment_id',
+        'patient_id', 'doctor_id', 'appointment_id', 'clinical_pathway_id',
         'diagnosis', 'action', 'medicine',
         'vital_signs', 'lab_results', 'notes',
     ];
@@ -39,5 +39,22 @@ class MedicalRecord extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function clinicalPathway(): BelongsTo
+    {
+        return $this->belongsTo(ClinicalPathway::class);
+    }
+
+    public function treatments(): BelongsToMany
+    {
+        return $this->belongsToMany(Treatment::class, 'medical_record_treatments')
+            ->withPivot('quantity', 'unit_price', 'notes')
+            ->withTimestamps();
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }

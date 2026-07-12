@@ -26,9 +26,11 @@ class PaymentController extends Controller
 
     public function create(): View
     {
+        // Limit 500 terbaru untuk dropdown supaya page tidak hang
         $appointments = Appointment::with('patient')
             ->whereIn('status', ['completed', 'in_progress', 'confirmed'])
             ->orderBy('appointment_date', 'desc')
+            ->limit(500)
             ->get();
         return view('payments.create', compact('appointments'));
     }
@@ -65,7 +67,7 @@ class PaymentController extends Controller
 
     public function edit(Payment $payment): View
     {
-        $appointments = Appointment::with('patient')->orderBy('appointment_date', 'desc')->get();
+        $appointments = Appointment::with('patient')->orderBy('appointment_date', 'desc')->limit(500)->get();
         return view('payments.edit', compact('payment', 'appointments'));
     }
 
@@ -96,6 +98,18 @@ class PaymentController extends Controller
     {
         $payment->delete();
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dihapus.');
+    }
+
+    public function printReceipt(Payment $payment): View
+    {
+        $payment->load(['appointment.patient', 'appointment.doctor']);
+        return view('payments.print-receipt', compact('payment'));
+    }
+
+    public function printBill(Payment $payment): View
+    {
+        $payment->load(['appointment.patient', 'appointment.doctor']);
+        return view('payments.print-bill', compact('payment'));
     }
 
     private function generateInvoiceNumber(): string

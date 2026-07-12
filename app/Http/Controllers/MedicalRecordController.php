@@ -25,9 +25,10 @@ class MedicalRecordController extends Controller
 
     public function create(): View
     {
-        $patients = Patient::where('is_active', true)->orderBy('name')->get();
-        $doctors = Doctor::where('status', 'active')->orderBy('name')->get();
-        $appointments = Appointment::whereIn('status', ['in_progress', 'completed', 'confirmed'])->orderBy('appointment_date', 'desc')->get();
+        // Limit dropdown agar page tidak hang dengan 10K+ data
+        $patients = Patient::where('is_active', true)->orderBy('name')->limit(500)->get();
+        $doctors = Doctor::where('status', 'active')->orderBy('name')->limit(200)->get();
+        $appointments = Appointment::whereIn('status', ['in_progress', 'completed', 'confirmed'])->orderBy('appointment_date', 'desc')->limit(500)->get();
         return view('medical-records.create', compact('patients', 'doctors', 'appointments'));
     }
 
@@ -40,6 +41,7 @@ class MedicalRecordController extends Controller
             'diagnosis' => 'required|string',
             'action' => 'nullable|string',
             'medicine' => 'nullable|string',
+            'vital_signs' => 'nullable|array',
             'lab_results' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
@@ -55,9 +57,10 @@ class MedicalRecordController extends Controller
 
     public function edit(MedicalRecord $medicalRecord): View
     {
-        $patients = Patient::where('is_active', true)->orderBy('name')->get();
-        $doctors = Doctor::where('status', 'active')->orderBy('name')->get();
-        $appointments = Appointment::whereIn('status', ['in_progress', 'completed', 'confirmed'])->orderBy('appointment_date', 'desc')->get();
+        // Limit dropdown agar page tidak hang dengan 10K+ data
+        $patients = Patient::where('is_active', true)->orderBy('name')->limit(500)->get();
+        $doctors = Doctor::where('status', 'active')->orderBy('name')->limit(200)->get();
+        $appointments = Appointment::whereIn('status', ['in_progress', 'completed', 'confirmed'])->orderBy('appointment_date', 'desc')->limit(500)->get();
         return view('medical-records.edit', compact('medicalRecord', 'patients', 'doctors', 'appointments'));
     }
 
@@ -70,6 +73,7 @@ class MedicalRecordController extends Controller
             'diagnosis' => 'required|string',
             'action' => 'nullable|string',
             'medicine' => 'nullable|string',
+            'vital_signs' => 'nullable|array',
             'lab_results' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
@@ -81,5 +85,11 @@ class MedicalRecordController extends Controller
     {
         $medicalRecord->delete();
         return redirect()->route('medical-records.index')->with('success', 'Rekam medis berhasil dihapus.');
+    }
+
+    public function print(MedicalRecord $medicalRecord): View
+    {
+        $medicalRecord->load(['patient', 'doctor', 'appointment']);
+        return view('medical-records.print', compact('medicalRecord'));
     }
 }

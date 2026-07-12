@@ -32,10 +32,15 @@
                     <input type="date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date') }}">
                     @error('birth_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">NIK</label>
-                    <input type="text" name="nik" class="form-control @error('nik') is-invalid @enderror" value="{{ old('nik') }}" maxlength="20">
+                    <input type="text" name="nik" class="form-control @error('nik') is-invalid @enderror" value="{{ old('nik') }}" maxlength="20" placeholder="16 digit">
                     @error('nik') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">No. BPJS</label>
+                    <input type="text" name="bpjs_number" class="form-control @error('bpjs_number') is-invalid @enderror" value="{{ old('bpjs_number') }}" maxlength="20" placeholder="13 digit">
+                    @error('bpjs_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Email</label>
