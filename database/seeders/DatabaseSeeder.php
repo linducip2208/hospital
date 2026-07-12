@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             PageContentSeeder::class,
             MassiveDataSeeder::class,
             BlogSeeder::class,
+            DashboardDemoSeeder::class,
         ]);
     }
 }

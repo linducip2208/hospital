@@ -42,6 +42,14 @@ class ReportController extends Controller
         return view('reports.pdf', $data);
     }
 
+    public function finance(Request $request): View
+    {
+        [$from, $to] = $this->range($request);
+        $data = $this->service->financeAdvanced($from, $to);
+
+        return view('reports.finance', $data);
+    }
+
     public function exportCsv(Request $request): StreamedResponse
     {
         [$from, $to] = $this->range($request);

@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\Department;
 use App\Models\Doctor;
 use App\Models\Drug;
+use App\Models\InsuranceClaim;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\Room;
@@ -82,6 +84,52 @@ class ReportService
             'revenue' => $this->revenue($from, $to, $groupBy),
             'topTreatments' => $this->topTreatments($from, $to),
             'recentPayments' => $this->recentPayments($from, $to),
+        ];
+    }
+
+    /** Cost center: P&L / pendapatan per departemen. */
+    public function costCenter(Carbon $from, Carbon $to): Collection
+    {
+        return Department::leftJoin('payments', function ($join) use ($from, $to) {
+            $join->on('payments.department_id', '=', 'departments.id')
+                ->where('payments.status', 'completed')
+                ->whereBetween('payments.created_at', [$from, $to]);
+        })
+            ->selectRaw('departments.name, COUNT(payments.id) as tx, COALESCE(SUM(payments.amount),0) as revenue')
+            ->groupBy('departments.id', 'departments.name')
+            ->orderByDesc('revenue')
+            ->get();
+    }
+
+    /** Billing breakdown per payer: umum / BPJS / asuransi. */
+    public function billingBreakdown(Carbon $from, Carbon $to): Collection
+    {
+        return Payment::where('status', 'completed')
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('payer_type, COUNT(*) as tx, SUM(amount) as revenue')
+            ->groupBy('payer_type')
+            ->get();
+    }
+
+    /** Case-mix: distribusi klaim per kelompok INA-CBG / diagnosis. */
+    public function caseMix(Carbon $from, Carbon $to, int $limit = 10): Collection
+    {
+        return InsuranceClaim::whereBetween('service_date', [$from, $to])
+            ->selectRaw('COALESCE(NULLIF(inacbg_code, ""), diagnosis_code) as grp, COUNT(*) as cases, SUM(claimed_amount) as claimed, SUM(approved_amount) as approved')
+            ->groupBy('grp')
+            ->orderByDesc('cases')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function financeAdvanced(Carbon $from, Carbon $to): array
+    {
+        return [
+            'from' => $from,
+            'to' => $to,
+            'costCenter' => $this->costCenter($from, $to),
+            'billingBreakdown' => $this->billingBreakdown($from, $to),
+            'caseMix' => $this->caseMix($from, $to),
         ];
     }
 }

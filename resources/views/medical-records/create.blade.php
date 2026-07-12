@@ -48,6 +48,15 @@
                     <textarea name="diagnosis" class="form-control @error('diagnosis') is-invalid @enderror" rows="3" required>{{ old('diagnosis') }}</textarea>
                     @error('diagnosis') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Kode ICD-10 <small class="text-muted">(untuk klaim BPJS/INA-CBG)</small></label>
+                    <input type="text" name="icd10_code" id="icd10Code" class="form-control" value="{{ old('icd10_code') }}" placeholder="mis. E11" autocomplete="off" list="icd10List">
+                    <datalist id="icd10List"></datalist>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Nama Diagnosis (ICD-10)</label>
+                    <input type="text" name="icd10_name" id="icd10Name" class="form-control" value="{{ old('icd10_name') }}" placeholder="otomatis terisi saat pilih kode">
+                </div>
                 <div class="col-12">
                     <label class="form-label">Tindakan</label>
                     <textarea name="action" class="form-control @error('action') is-invalid @enderror" rows="3">{{ old('action') }}</textarea>
@@ -77,3 +86,35 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const codeInput = document.getElementById('icd10Code');
+    const nameInput = document.getElementById('icd10Name');
+    const list = document.getElementById('icd10List');
+    if (!codeInput) return;
+    let timer, map = {};
+    async function search(q) {
+        const res = await fetch('{{ route('clinical.icd10') }}?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        list.innerHTML = '';
+        map = {};
+        data.forEach(d => {
+            map[d.code] = d.name;
+            const opt = document.createElement('option');
+            opt.value = d.code;
+            opt.label = d.name;
+            list.appendChild(opt);
+        });
+    }
+    codeInput.addEventListener('input', function () {
+        clearTimeout(timer);
+        const v = this.value.trim();
+        if (map[v]) nameInput.value = map[v];
+        timer = setTimeout(() => search(v), 250);
+    });
+    search('');
+})();
+</script>
+@endpush

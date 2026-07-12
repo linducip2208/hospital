@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\AmbulanceCallController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BloodDonationController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\ClinicalPathwayController;
+use App\Http\Controllers\ClinicalToolController;
 use App\Http\Controllers\CodeBlueActivationController;
 use App\Http\Controllers\CostEstimateController;
 use App\Http\Controllers\DashboardController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\DrugDestructionController;
 use App\Http\Controllers\DrugSupplyOrderController;
 use App\Http\Controllers\EmergencyController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EquipmentCalibrationController;
 use App\Http\Controllers\EquipmentMaintenanceController;
 use App\Http\Controllers\HospitalBedController;
 use App\Http\Controllers\IcuMonitoringController;
@@ -39,6 +42,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MaternityController;
 use App\Http\Controllers\MedicalCertificateController;
 use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\MedicalWasteController;
 use App\Http\Controllers\MedicationAdministrationController;
 use App\Http\Controllers\NurseAssignmentController;
 use App\Http\Controllers\NursingCareController;
@@ -70,6 +74,7 @@ use App\Http\Controllers\TelemedicineSessionController;
 use App\Http\Controllers\TreatmentController;
 use App\Http\Controllers\TutorialController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorController;
 use App\Http\Controllers\VitalSignsController;
 use App\Models\Doctor;
 use App\Models\Patient;
@@ -178,7 +183,13 @@ Route::middleware(['auth'])->group(function () {
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
+    Route::get('/reports/finance', [ReportController::class, 'finance'])->name('reports.finance');
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
+
+    // Clinical tools (AJAX): ICD-10, drug interaction, eligibilitas BPJS
+    Route::get('/clinical/icd10', [ClinicalToolController::class, 'icd10'])->name('clinical.icd10');
+    Route::post('/clinical/drug-interactions', [ClinicalToolController::class, 'drugInteractions'])->name('clinical.drug-interactions');
+    Route::get('/clinical/eligibility/{patient}', [ClinicalToolController::class, 'eligibility'])->name('clinical.eligibility');
 
     // Tutorial
     Route::get('/tutorial', [TutorialController::class, 'index'])->name('tutorial');
@@ -252,6 +263,9 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('categories/{category}', [BlogCategoryController::class, 'destroy'])->name('categories.destroy');
             Route::resource('posts', BlogPostController::class)->except(['show']);
         });
+
+        // Audit trail / activity log
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
 
     // Keperawatan ERP
@@ -281,6 +295,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Asset Management
     Route::resource('assets', AssetController::class);
+
+    // Kalibrasi Alat Kesehatan, Vendor, Limbah Medis B3 (operasional)
+    Route::resource('equipment-calibrations', EquipmentCalibrationController::class)->except(['show']);
+    Route::resource('vendors', VendorController::class)->except(['show']);
+    Route::resource('medical-wastes', MedicalWasteController::class)->except(['show']);
 
     // Procurement / Purchase Order
     Route::resource('purchase-orders', PurchaseOrderController::class);

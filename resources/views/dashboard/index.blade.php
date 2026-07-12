@@ -237,6 +237,9 @@
 {{-- Medical Visual Element --}}
 <div class="medical-wave fade-up mb-4"></div>
 
+{{-- Widget Klinis & Operasional Lanjutan --}}
+@include('dashboard._advanced_widgets')
+
 {{-- Analytics Section --}}
 <div class="row g-3 mb-4 fade-up">
     <div class="col-xl-8">

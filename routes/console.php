@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\AutoReorderDrugs;
 use App\Console\Commands\BackupDatabase;
 use App\Console\Commands\IndexNowSubmit;
 use App\Console\Commands\SendAppointmentReminders;
@@ -16,6 +17,11 @@ Artisan::command('inspire', function () {
 // Pengingat janji temu H-1 setiap pagi
 Schedule::command(SendAppointmentReminders::class, ['--days=1'])
     ->dailyAt('07:00')
+    ->withoutOverlapping();
+
+// Auto-reorder obat di bawah reorder level (draft PO)
+Schedule::command(AutoReorderDrugs::class)
+    ->dailyAt('06:00')
     ->withoutOverlapping();
 
 // Backup database harian dini hari

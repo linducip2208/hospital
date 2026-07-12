@@ -1014,326 +1014,391 @@
                 </a>
             </div>
 
-            {{-- ═══ Reorganized by Patient Journey & Business Flow ═══ --}}
+            {{-- ═══ Reorganized: Section → Group → Submenu (each with icons) ═══ --}}
 
-            {{-- 1. Aksi Cepat (Quick Actions — frequent daily ops) --}}
+            {{-- ════════════ 🏥 PELAYANAN KLINIS ════════════ --}}
             <div class="menu-group">
-                <div class="menu-group-header">⚡ Aksi Cepat</div>
-                <a href="{{ route('emergencies.create') }}" class="nav-link {{ request()->routeIs('emergencies.create') ? 'active' : '' }}" style="color: rgba(248,113,113,0.8) !important;">
-                    <i class="bi bi-lightning-charge-fill"></i> IGD Masuk
-                    <span class="count-badge" style="background:rgba(239,68,68,0.15);color:#f87171;">{{ \App\Models\Emergency::whereDate('created_at', today())->count() }}</span>
-                </a>
-                <a href="{{ route('appointments.create') }}" class="nav-link {{ request()->routeIs('appointments.create') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-plus"></i> Appointment Baru
-                </a>
-                <a href="{{ route('queues.create') }}" class="nav-link {{ request()->routeIs('queues.create') ? 'active' : '' }}">
-                    <i class="bi bi-person-plus"></i> Daftar Antrian
-                </a>
+                <div class="menu-group-header"><i class="bi bi-hospital"></i> Pelayanan Klinis</div>
             </div>
 
-            {{-- 2. Pendaftaran Pasien (Patient Registration — entry point) --}}
+            {{-- Pendaftaran Pasien --}}
             <div class="menu-group">
-                @php($regOpen = request()->is('patients*','appointments*','queues*','patient-screenings*'))
+                @php($regOpen = request()->is('patients*','patient-screenings*'))
                 <div class="accordion" id="menuReg">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $regOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseReg" aria-expanded="{{ $regOpen ? 'true' : 'false' }}" aria-controls="collapseReg">
-                            <i class="bi bi-person-vcard"></i> 1. Pendaftaran Pasien
+                            <i class="bi bi-person-vcard"></i> Pendaftaran Pasien
                         </button>
                         <div id="collapseReg" class="accordion-collapse collapse {{ $regOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('patients.index') }}" class="nav-link {{ request()->routeIs('patients.*') ? 'active' : '' }}">Data Pasien</a>
-                                <a href="{{ route('appointments.index') }}" class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}">Appointment</a>
-                                <a href="{{ route('queues.index') }}" class="nav-link {{ request()->routeIs('queues.*') ? 'active' : '' }}">Antrian Poli</a>
-                                <a href="{{ route('patient-screenings.index') }}" class="nav-link {{ request()->routeIs('patient-screenings.*') ? 'active' : '' }}">Skrining Pasien</a>
+                                <a href="{{ route('patients.index') }}" class="nav-link {{ request()->routeIs('patients.*') ? 'active' : '' }}"><i class="bi bi-people"></i> Data Pasien</a>
+                                <a href="{{ route('patient-screenings.index') }}" class="nav-link {{ request()->routeIs('patient-screenings.*') ? 'active' : '' }}"><i class="bi bi-clipboard2-check"></i> Skrining Pasien</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 3. IGD & Gawat Darurat (Emergency Response) --}}
+            {{-- IGD & Gawat Darurat --}}
             <div class="menu-group">
                 @php($emerOpen = request()->is('emergencies*','code-blue-activations*','ambulances*','ambulance-calls*'))
                 <div class="accordion" id="menuEmer">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $emerOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseEmer" aria-expanded="{{ $emerOpen ? 'true' : 'false' }}" aria-controls="collapseEmer">
-                            <i class="bi bi-exclamation-octagon-fill" style="color:#f87171;"></i> 2. IGD & Gawat Darurat
+                            <i class="bi bi-exclamation-octagon-fill" style="color:#f87171;"></i> IGD & Gawat Darurat
                         </button>
                         <div id="collapseEmer" class="accordion-collapse collapse {{ $emerOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('emergencies.index') }}" class="nav-link {{ request()->routeIs('emergencies.*') ? 'active' : '' }}">Triase IGD <span class="count-badge">24J</span></a>
-                                <a href="{{ route('code-blue-activations.index') }}" class="nav-link {{ request()->routeIs('code-blue-activations.*') ? 'active' : '' }}">Aktivasi Code Blue</a>
-                                <a href="{{ route('ambulances.index') }}" class="nav-link {{ request()->routeIs('ambulances.*') ? 'active' : '' }}">Armada Ambulans</a>
-                                <a href="{{ route('ambulance-calls.index') }}" class="nav-link {{ request()->routeIs('ambulance-calls.*') ? 'active' : '' }}">Panggilan Darurat</a>
+                                <a href="{{ route('emergencies.index') }}" class="nav-link {{ request()->routeIs('emergencies.*') ? 'active' : '' }}"><i class="bi bi-heart-pulse-fill"></i> Triase IGD <span class="count-badge">24J</span></a>
+                                <a href="{{ route('code-blue-activations.index') }}" class="nav-link {{ request()->routeIs('code-blue-activations.*') ? 'active' : '' }}"><i class="bi bi-broadcast"></i> Aktivasi Code Blue</a>
+                                <a href="{{ route('ambulances.index') }}" class="nav-link {{ request()->routeIs('ambulances.*') ? 'active' : '' }}"><i class="bi bi-truck-front"></i> Armada Ambulans</a>
+                                <a href="{{ route('ambulance-calls.index') }}" class="nav-link {{ request()->routeIs('ambulance-calls.*') ? 'active' : '' }}"><i class="bi bi-telephone-inbound"></i> Panggilan Darurat</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 4. Pemeriksaan & Asuhan Keperawatan (Nursing Assessment) --}}
+            {{-- Antrian & Appointment --}}
             <div class="menu-group">
-                @php($nursingOpen = request()->is('vital-signs*','nurse-assignments*','medication-administrations*','nursing-cares*','shift-handovers*'))
-                <div class="accordion" id="menuNursing">
+                @php($queueOpen = request()->is('appointments*','queues*'))
+                <div class="accordion" id="menuQueue">
                     <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $nursingOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseNursing" aria-expanded="{{ $nursingOpen ? 'true' : 'false' }}" aria-controls="collapseNursing">
-                            <i class="bi bi-clipboard2-pulse"></i> 3. Asuhan Keperawatan
+                        <button type="button" class="accordion-button {{ $queueOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseQueue" aria-expanded="{{ $queueOpen ? 'true' : 'false' }}" aria-controls="collapseQueue">
+                            <i class="bi bi-calendar-check"></i> Antrian & Appointment
                         </button>
-                        <div id="collapseNursing" class="accordion-collapse collapse {{ $nursingOpen ? 'show' : '' }}">
+                        <div id="collapseQueue" class="accordion-collapse collapse {{ $queueOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('vital-signs.index') }}" class="nav-link {{ request()->routeIs('vital-signs.*') ? 'active' : '' }}">Tanda Vital</a>
-                                <a href="{{ route('nurse-assignments.index') }}" class="nav-link {{ request()->routeIs('nurse-assignments.*') ? 'active' : '' }}">Penugasan Perawat</a>
-                                <a href="{{ route('nursing-cares.index') }}" class="nav-link {{ request()->routeIs('nursing-cares.*') ? 'active' : '' }}">Asuhan (SOAP)</a>
-                                <a href="{{ route('medication-administrations.index') }}" class="nav-link {{ request()->routeIs('medication-administrations.*') ? 'active' : '' }}">Pemberian Obat</a>
-                                <a href="{{ route('shift-handovers.index') }}" class="nav-link {{ request()->routeIs('shift-handovers.*') ? 'active' : '' }}">Serah Terima Shift</a>
+                                <a href="{{ route('appointments.index') }}" class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}"><i class="bi bi-calendar2-week"></i> Appointment</a>
+                                <a href="{{ route('queues.index') }}" class="nav-link {{ request()->routeIs('queues.*') ? 'active' : '' }}"><i class="bi bi-list-ol"></i> Antrian Poli</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 5. Penunjang Diagnostik (Diagnostic Support) --}}
-            <div class="menu-group">
-                @php($diagOpen = request()->is('lab-tests*','radiologies*','blood-donations*'))
-                <div class="accordion" id="menuDiag">
-                    <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $diagOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseDiag" aria-expanded="{{ $diagOpen ? 'true' : 'false' }}" aria-controls="collapseDiag">
-                            <i class="bi bi-clipboard2-data"></i> 4. Penunjang Diagnostik
-                        </button>
-                        <div id="collapseDiag" class="accordion-collapse collapse {{ $diagOpen ? 'show' : '' }}">
-                            <div class="accordion-body">
-                                <a href="{{ route('lab-tests.index') }}" class="nav-link {{ request()->routeIs('lab-tests.*') ? 'active' : '' }}">Laboratorium</a>
-                                <a href="{{ route('radiologies.index') }}" class="nav-link {{ request()->routeIs('radiologies.*') ? 'active' : '' }}">Radiologi</a>
-                                <a href="{{ route('blood-donations.index') }}" class="nav-link {{ request()->routeIs('blood-donations.*') ? 'active' : '' }}">Bank Darah</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 6. Pelayanan Medis & Tindakan (Medical Service & Procedures) --}}
+            {{-- Pelayanan Medis (Poliklinik) --}}
             <div class="menu-group">
                 @php($medisOpen = request()->is('medical-records*','treatments*','surgeries*','prescriptions*','informed-consents*','referrals*','telemedicine-sessions*','odontograms*'))
                 <div class="accordion" id="menuMedis">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $medisOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseMedis" aria-expanded="{{ $medisOpen ? 'true' : 'false' }}" aria-controls="collapseMedis">
-                            <i class="bi bi-heart-pulse"></i> 5. Pelayanan Medis
+                            <i class="bi bi-heart-pulse"></i> Pelayanan Medis (Poliklinik)
                         </button>
                         <div id="collapseMedis" class="accordion-collapse collapse {{ $medisOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('medical-records.index') }}" class="nav-link {{ request()->routeIs('medical-records.*') ? 'active' : '' }}">Rekam Medis</a>
-                                <a href="{{ route('treatments.index') }}" class="nav-link {{ request()->routeIs('treatments.*') ? 'active' : '' }}">Treatment / Tindakan</a>
-                                <a href="{{ route('prescriptions.index') }}" class="nav-link {{ request()->routeIs('prescriptions.*') ? 'active' : '' }}">Resep Obat</a>
-                                <a href="{{ route('surgeries.index') }}" class="nav-link {{ request()->routeIs('surgeries.*') ? 'active' : '' }}">Operasi / OT</a>
-                                <a href="{{ route('informed-consents.index') }}" class="nav-link {{ request()->routeIs('informed-consents.*') ? 'active' : '' }}">Persetujuan Tindakan</a>
-                                <a href="{{ route('referrals.index') }}" class="nav-link {{ request()->routeIs('referrals.*') ? 'active' : '' }}">Rujukan</a>
-                                <a href="{{ route('telemedicine-sessions.index') }}" class="nav-link {{ request()->routeIs('telemedicine-sessions.*') ? 'active' : '' }}">Telemedicine</a>
-                                <a href="{{ route('odontograms.index') }}" class="nav-link {{ request()->routeIs('odontograms.*') ? 'active' : '' }}">Odontogram</a>
+                                <a href="{{ route('medical-records.index') }}" class="nav-link {{ request()->routeIs('medical-records.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-medical"></i> Rekam Medis</a>
+                                <a href="{{ route('treatments.index') }}" class="nav-link {{ request()->routeIs('treatments.*') ? 'active' : '' }}"><i class="bi bi-clipboard2-pulse"></i> Treatment / Tindakan</a>
+                                <a href="{{ route('prescriptions.index') }}" class="nav-link {{ request()->routeIs('prescriptions.*') ? 'active' : '' }}"><i class="bi bi-prescription2"></i> Resep Obat</a>
+                                <a href="{{ route('surgeries.index') }}" class="nav-link {{ request()->routeIs('surgeries.*') ? 'active' : '' }}"><i class="bi bi-scissors"></i> Operasi / OT</a>
+                                <a href="{{ route('informed-consents.index') }}" class="nav-link {{ request()->routeIs('informed-consents.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-check"></i> Persetujuan Tindakan</a>
+                                <a href="{{ route('referrals.index') }}" class="nav-link {{ request()->routeIs('referrals.*') ? 'active' : '' }}"><i class="bi bi-signpost-split"></i> Rujukan</a>
+                                <a href="{{ route('telemedicine-sessions.index') }}" class="nav-link {{ request()->routeIs('telemedicine-sessions.*') ? 'active' : '' }}"><i class="bi bi-camera-video"></i> Telemedicine</a>
+                                <a href="{{ route('odontograms.index') }}" class="nav-link {{ request()->routeIs('odontograms.*') ? 'active' : '' }}"><i class="bi bi-emoji-smile"></i> Odontogram</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 7. Kebidanan & Anak (Maternal & Pediatric Care) --}}
+            {{-- Kebidanan & Anak --}}
             <div class="menu-group">
                 @php($kebidananOpen = request()->is('maternities*','anc-records*','partographs*','postnatal-records*','baby-immunizations*'))
                 <div class="accordion" id="menuKebidanan">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $kebidananOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseKebidanan" aria-expanded="{{ $kebidananOpen ? 'true' : 'false' }}" aria-controls="collapseKebidanan">
-                            <i class="bi bi-gender-female"></i> 6. Kebidanan & Anak
+                            <i class="bi bi-gender-female"></i> Kebidanan & Anak
                         </button>
                         <div id="collapseKebidanan" class="accordion-collapse collapse {{ $kebidananOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('anc-records.index') }}" class="nav-link {{ request()->routeIs('anc-records.*') ? 'active' : '' }}">Pemeriksaan Hamil (ANC)</a>
-                                <a href="{{ route('partographs.index') }}" class="nav-link {{ request()->routeIs('partographs.*') ? 'active' : '' }}">Partograf</a>
-                                <a href="{{ route('maternities.index') }}" class="nav-link {{ request()->routeIs('maternities.*') ? 'active' : '' }}">Ruang Bersalin</a>
-                                <a href="{{ route('postnatal-records.index') }}" class="nav-link {{ request()->routeIs('postnatal-records.*') ? 'active' : '' }}">Perawatan Nifas</a>
-                                <a href="{{ route('baby-immunizations.index') }}" class="nav-link {{ request()->routeIs('baby-immunizations.*') ? 'active' : '' }}">Imunisasi Bayi</a>
+                                <a href="{{ route('anc-records.index') }}" class="nav-link {{ request()->routeIs('anc-records.*') ? 'active' : '' }}"><i class="bi bi-heart"></i> Pemeriksaan Hamil (ANC)</a>
+                                <a href="{{ route('partographs.index') }}" class="nav-link {{ request()->routeIs('partographs.*') ? 'active' : '' }}"><i class="bi bi-graph-up"></i> Partograf</a>
+                                <a href="{{ route('maternities.index') }}" class="nav-link {{ request()->routeIs('maternities.*') ? 'active' : '' }}"><i class="bi bi-hospital"></i> Ruang Bersalin</a>
+                                <a href="{{ route('postnatal-records.index') }}" class="nav-link {{ request()->routeIs('postnatal-records.*') ? 'active' : '' }}"><i class="bi bi-flower1"></i> Perawatan Nifas</a>
+                                <a href="{{ route('baby-immunizations.index') }}" class="nav-link {{ request()->routeIs('baby-immunizations.*') ? 'active' : '' }}"><i class="bi bi-shield-plus"></i> Imunisasi Bayi</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 8. Rawat Inap & ICU (Inpatient Care) --}}
+            {{-- Rawat Inap & ICU --}}
             <div class="menu-group">
                 @php($inpatientOpen = request()->is('rooms*','hospital-beds*','icu-monitorings*','diet-orders*'))
                 <div class="accordion" id="menuInpatient">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $inpatientOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseInpatient" aria-expanded="{{ $inpatientOpen ? 'true' : 'false' }}" aria-controls="collapseInpatient">
-                            <i class="bi bi-building-fill"></i> 7. Rawat Inap & ICU
+                            <i class="bi bi-building-fill"></i> Rawat Inap & ICU
                         </button>
                         <div id="collapseInpatient" class="accordion-collapse collapse {{ $inpatientOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}">Daftar Kamar</a>
-                                <a href="{{ route('hospital-beds.index') }}" class="nav-link {{ request()->routeIs('hospital-beds.*') ? 'active' : '' }}">Bed Management</a>
-                                <a href="{{ route('icu-monitorings.index') }}" class="nav-link {{ request()->routeIs('icu-monitorings.*') ? 'active' : '' }}">Monitoring ICU</a>
-                                <a href="{{ route('diet-orders.index') }}" class="nav-link {{ request()->routeIs('diet-orders.*') ? 'active' : '' }}">Order Diet Pasien</a>
+                                <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}"><i class="bi bi-door-open"></i> Daftar Kamar</a>
+                                <a href="{{ route('hospital-beds.index') }}" class="nav-link {{ request()->routeIs('hospital-beds.*') ? 'active' : '' }}"><i class="bi bi-hospital"></i> Bed Management</a>
+                                <a href="{{ route('icu-monitorings.index') }}" class="nav-link {{ request()->routeIs('icu-monitorings.*') ? 'active' : '' }}"><i class="bi bi-activity"></i> Monitoring ICU</a>
+                                <a href="{{ route('diet-orders.index') }}" class="nav-link {{ request()->routeIs('diet-orders.*') ? 'active' : '' }}"><i class="bi bi-egg-fried"></i> Order Diet Pasien</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 9. Apotek & Farmasi (Pharmacy) --}}
+            {{-- Asuhan Keperawatan --}}
+            <div class="menu-group">
+                @php($nursingOpen = request()->is('vital-signs*','nurse-assignments*','medication-administrations*','nursing-cares*','shift-handovers*'))
+                <div class="accordion" id="menuNursing">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $nursingOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseNursing" aria-expanded="{{ $nursingOpen ? 'true' : 'false' }}" aria-controls="collapseNursing">
+                            <i class="bi bi-clipboard2-pulse"></i> Asuhan Keperawatan
+                        </button>
+                        <div id="collapseNursing" class="accordion-collapse collapse {{ $nursingOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('vital-signs.index') }}" class="nav-link {{ request()->routeIs('vital-signs.*') ? 'active' : '' }}"><i class="bi bi-thermometer-half"></i> Tanda Vital</a>
+                                <a href="{{ route('nurse-assignments.index') }}" class="nav-link {{ request()->routeIs('nurse-assignments.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> Penugasan Perawat</a>
+                                <a href="{{ route('nursing-cares.index') }}" class="nav-link {{ request()->routeIs('nursing-cares.*') ? 'active' : '' }}"><i class="bi bi-journal-medical"></i> Asuhan (SOAP)</a>
+                                <a href="{{ route('medication-administrations.index') }}" class="nav-link {{ request()->routeIs('medication-administrations.*') ? 'active' : '' }}"><i class="bi bi-capsule"></i> Pemberian Obat</a>
+                                <a href="{{ route('shift-handovers.index') }}" class="nav-link {{ request()->routeIs('shift-handovers.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i> Serah Terima Shift</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Pulang & Dokumen (Discharge) --}}
+            <div class="menu-group">
+                @php($dischargeOpen = request()->is('discharge-summaries*','medical-certificates*','cost-estimates*'))
+                <div class="accordion" id="menuDischarge">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $dischargeOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseDischarge" aria-expanded="{{ $dischargeOpen ? 'true' : 'false' }}" aria-controls="collapseDischarge">
+                            <i class="bi bi-file-earmark-text"></i> Pulang & Dokumen
+                        </button>
+                        <div id="collapseDischarge" class="accordion-collapse collapse {{ $dischargeOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('discharge-summaries.index') }}" class="nav-link {{ request()->routeIs('discharge-summaries.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-medical"></i> Resume Medis Pulang</a>
+                                <a href="{{ route('medical-certificates.index') }}" class="nav-link {{ request()->routeIs('medical-certificates.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-ruled"></i> Surat Keterangan</a>
+                                <a href="{{ route('cost-estimates.index') }}" class="nav-link {{ request()->routeIs('cost-estimates.*') ? 'active' : '' }}"><i class="bi bi-calculator"></i> Estimasi Biaya</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ════════════ 🔬 PENUNJANG MEDIS ════════════ --}}
+            <div class="menu-group">
+                <div class="menu-group-header"><i class="bi bi-clipboard2-data"></i> Penunjang Medis</div>
+            </div>
+
+            {{-- Penunjang Diagnostik (Lab/Radiologi) --}}
+            <div class="menu-group">
+                @php($diagOpen = request()->is('lab-tests*','radiologies*','blood-donations*'))
+                <div class="accordion" id="menuDiag">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $diagOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseDiag" aria-expanded="{{ $diagOpen ? 'true' : 'false' }}" aria-controls="collapseDiag">
+                            <i class="bi bi-clipboard2-data"></i> Penunjang Diagnostik
+                        </button>
+                        <div id="collapseDiag" class="accordion-collapse collapse {{ $diagOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('lab-tests.index') }}" class="nav-link {{ request()->routeIs('lab-tests.*') ? 'active' : '' }}"><i class="bi bi-eyedropper"></i> Laboratorium</a>
+                                <a href="{{ route('radiologies.index') }}" class="nav-link {{ request()->routeIs('radiologies.*') ? 'active' : '' }}"><i class="bi bi-radioactive"></i> Radiologi</a>
+                                <a href="{{ route('blood-donations.index') }}" class="nav-link {{ request()->routeIs('blood-donations.*') ? 'active' : '' }}"><i class="bi bi-droplet-fill"></i> Bank Darah</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Apotek & Farmasi --}}
             <div class="menu-group">
                 @php($pharmaOpen = request()->is('drugs*','drug-supply-orders*','drug-destructions*'))
                 <div class="accordion" id="menuPharma">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $pharmaOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapsePharma" aria-expanded="{{ $pharmaOpen ? 'true' : 'false' }}" aria-controls="collapsePharma">
-                            <i class="bi bi-capsule-pill"></i> 8. Apotek & Farmasi
+                            <i class="bi bi-capsule-pill"></i> Apotek & Farmasi
                         </button>
                         <div id="collapsePharma" class="accordion-collapse collapse {{ $pharmaOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('drugs.index') }}" class="nav-link {{ request()->routeIs('drugs.*') ? 'active' : '' }}">Inventaris Obat</a>
-                                <a href="{{ route('drug-supply-orders.index') }}" class="nav-link {{ request()->routeIs('drug-supply-orders.*') ? 'active' : '' }}">Surat Pesanan Obat</a>
-                                <a href="{{ route('drug-destructions.index') }}" class="nav-link {{ request()->routeIs('drug-destructions.*') ? 'active' : '' }}">Pemusnahan Obat</a>
+                                <a href="{{ route('drugs.index') }}" class="nav-link {{ request()->routeIs('drugs.*') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> Inventaris Obat</a>
+                                <a href="{{ route('drug-supply-orders.index') }}" class="nav-link {{ request()->routeIs('drug-supply-orders.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-plus"></i> Surat Pesanan Obat</a>
+                                <a href="{{ route('drug-destructions.index') }}" class="nav-link {{ request()->routeIs('drug-destructions.*') ? 'active' : '' }}"><i class="bi bi-trash3"></i> Pemusnahan Obat</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 10. Pulang & Dokumen (Discharge & Documents) --}}
+            {{-- Aset & Logistik / Alkes --}}
             <div class="menu-group">
-                @php($dischargeOpen = request()->is('discharge-summaries*','medical-certificates*','cost-estimates*','insurance-claims*'))
-                <div class="accordion" id="menuDischarge">
+                @php($logOpen = request()->is('assets*','purchase-orders*','vendors*','equipment-calibrations*','medical-wastes*'))
+                <div class="accordion" id="menuLog">
                     <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $dischargeOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseDischarge" aria-expanded="{{ $dischargeOpen ? 'true' : 'false' }}" aria-controls="collapseDischarge">
-                            <i class="bi bi-file-earmark-text"></i> 9. Pulang & Dokumen
+                        <button type="button" class="accordion-button {{ $logOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseLog" aria-expanded="{{ $logOpen ? 'true' : 'false' }}" aria-controls="collapseLog">
+                            <i class="bi bi-box-seam"></i> Aset & Logistik / Alkes
                         </button>
-                        <div id="collapseDischarge" class="accordion-collapse collapse {{ $dischargeOpen ? 'show' : '' }}">
+                        <div id="collapseLog" class="accordion-collapse collapse {{ $logOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('discharge-summaries.index') }}" class="nav-link {{ request()->routeIs('discharge-summaries.*') ? 'active' : '' }}">Resume Medis Pulang</a>
-                                <a href="{{ route('medical-certificates.index') }}" class="nav-link {{ request()->routeIs('medical-certificates.*') ? 'active' : '' }}">Surat Keterangan</a>
-                                <a href="{{ route('cost-estimates.index') }}" class="nav-link {{ request()->routeIs('cost-estimates.*') ? 'active' : '' }}">Estimasi Biaya</a>
-                                <a href="{{ route('insurance-claims.index') }}" class="nav-link {{ request()->routeIs('insurance-claims.*') ? 'active' : '' }}">Klaim Asuransi</a>
+                                <a href="{{ route('assets.index') }}" class="nav-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"><i class="bi bi-pc-display"></i> Aset & Inventaris</a>
+                                <a href="{{ route('equipment-calibrations.index') }}" class="nav-link {{ request()->routeIs('equipment-calibrations.*') ? 'active' : '' }}"><i class="bi bi-tools"></i> Kalibrasi Alkes</a>
+                                <a href="{{ route('medical-wastes.index') }}" class="nav-link {{ request()->routeIs('medical-wastes.*') ? 'active' : '' }}"><i class="bi bi-biohazard"></i> Limbah Medis B3</a>
+                                <a href="{{ route('vendors.index') }}" class="nav-link {{ request()->routeIs('vendors.*') ? 'active' : '' }}"><i class="bi bi-shop"></i> Vendor / Supplier</a>
+                                <a href="{{ route('purchase-orders.index') }}" class="nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}"><i class="bi bi-cart-check"></i> Purchase Order</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 11. Kasir & Pembayaran (Cashier & Billing) --}}
+            {{-- ════════════ 💰 KEUANGAN ════════════ --}}
+            <div class="menu-group">
+                <div class="menu-group-header"><i class="bi bi-cash-coin"></i> Keuangan</div>
+            </div>
+
+            {{-- Kasir & Pembayaran --}}
             <div class="menu-group">
                 @php($billingOpen = request()->is('payments*','reports*'))
                 <div class="accordion" id="menuBilling">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $billingOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseBilling" aria-expanded="{{ $billingOpen ? 'true' : 'false' }}" aria-controls="collapseBilling">
-                            <i class="bi bi-cash-stack"></i> 10. Kasir & Pembayaran
+                            <i class="bi bi-cash-stack"></i> Kasir & Pembayaran
                         </button>
                         <div id="collapseBilling" class="accordion-collapse collapse {{ $billingOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">Transaksi Pembayaran</a>
-                                <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">Laporan Pendapatan</a>
+                                <a href="{{ route('payments.index') }}" class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}"><i class="bi bi-credit-card"></i> Transaksi Pembayaran</a>
+                                <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Laporan Pendapatan</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 12. Mutu & Audit Klinis (Quality & Clinical Audit) --}}
-            <div class="menu-group">
-                @php($qualOpen = request()->is('patient-safety-incidents*','infection-surveillances*','clinical-pathways*','patient-feedbacks*','equipment-maintenances*'))
-                <div class="accordion" id="menuQual">
-                    <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $qualOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseQual" aria-expanded="{{ $qualOpen ? 'true' : 'false' }}" aria-controls="collapseQual">
-                            <i class="bi bi-shield-check"></i> 11. Mutu & Audit
-                        </button>
-                        <div id="collapseQual" class="accordion-collapse collapse {{ $qualOpen ? 'show' : '' }}">
-                            <div class="accordion-body">
-                                <a href="{{ route('patient-safety-incidents.index') }}" class="nav-link {{ request()->routeIs('patient-safety-incidents.*') ? 'active' : '' }}">Insiden Keselamatan (IKP)</a>
-                                <a href="{{ route('infection-surveillances.index') }}" class="nav-link {{ request()->routeIs('infection-surveillances.*') ? 'active' : '' }}">Surveilans Infeksi (HAIs)</a>
-                                <a href="{{ route('clinical-pathways.index') }}" class="nav-link {{ request()->routeIs('clinical-pathways.*') ? 'active' : '' }}">Clinical Pathway</a>
-                                <a href="{{ route('patient-feedbacks.index') }}" class="nav-link {{ request()->routeIs('patient-feedbacks.*') ? 'active' : '' }}">Feedback Pasien</a>
-                                <a href="{{ route('equipment-maintenances.index') }}" class="nav-link {{ request()->routeIs('equipment-maintenances.*') ? 'active' : '' }}">Maintenance Alat</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 13. SDM & Master Data (HR Master) --}}
-            <div class="menu-group">
-                @php($masterOpen = request()->is('doctors*','employees*','users*','departments*','staff-schedules*','polyclinics*'))
-                <div class="accordion" id="menuMaster">
-                    <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $masterOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseMaster" aria-expanded="{{ $masterOpen ? 'true' : 'false' }}" aria-controls="collapseMaster">
-                            <i class="bi bi-people-fill"></i> 12. SDM & Master Data
-                        </button>
-                        <div id="collapseMaster" class="accordion-collapse collapse {{ $masterOpen ? 'show' : '' }}">
-                            <div class="accordion-body">
-                                <a href="{{ route('doctors.index') }}" class="nav-link {{ request()->routeIs('doctors.*') ? 'active' : '' }}">Dokter</a>
-                                <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">Karyawan</a>
-                                <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">Pengguna Sistem</a>
-                                <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}">Departemen</a>
-                                <a href="{{ route('polyclinics.index') }}" class="nav-link {{ request()->routeIs('polyclinics.*') ? 'active' : '' }}">Polyclinic / Poli</a>
-                                <a href="{{ route('staff-schedules.index') }}" class="nav-link {{ request()->routeIs('staff-schedules.*') ? 'active' : '' }}">Jadwal Staff</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 14. HR Operasional (HR Operations — Attendance & Payroll) --}}
-            <div class="menu-group">
-                @php($hrOpsOpen = request()->is('attendances*','salaries*','leaves*'))
-                <div class="accordion" id="menuHROps">
-                    <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $hrOpsOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseHROps" aria-expanded="{{ $hrOpsOpen ? 'true' : 'false' }}" aria-controls="collapseHROps">
-                            <i class="bi bi-person-workspace"></i> 13. HR Operasional
-                        </button>
-                        <div id="collapseHROps" class="accordion-collapse collapse {{ $hrOpsOpen ? 'show' : '' }}">
-                            <div class="accordion-body">
-                                <a href="{{ route('attendances.index') }}" class="nav-link {{ request()->routeIs('attendances.*') ? 'active' : '' }}">Absensi</a>
-                                <a href="{{ route('salaries.index') }}" class="nav-link {{ request()->routeIs('salaries.*') ? 'active' : '' }}">Penggajian</a>
-                                <a href="{{ route('leaves.index') }}" class="nav-link {{ request()->routeIs('leaves.*') ? 'active' : '' }}">Cuti & Izin</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 15. Akuntansi (Accounting) --}}
+            {{-- Akuntansi --}}
             <div class="menu-group">
                 @php($acctOpen = request()->is('chart-of-accounts*','journal-entries*'))
                 <div class="accordion" id="menuAcct">
                     <div class="accordion-item">
                         <button type="button" class="accordion-button {{ $acctOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseAcct" aria-expanded="{{ $acctOpen ? 'true' : 'false' }}" aria-controls="collapseAcct">
-                            <i class="bi bi-journal-bookmark"></i> 14. Akuntansi
+                            <i class="bi bi-journal-bookmark"></i> Akuntansi
                         </button>
                         <div id="collapseAcct" class="accordion-collapse collapse {{ $acctOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('chart-of-accounts.index') }}" class="nav-link {{ request()->routeIs('chart-of-accounts.*') ? 'active' : '' }}">Chart of Accounts</a>
-                                <a href="{{ route('journal-entries.index') }}" class="nav-link {{ request()->routeIs('journal-entries.*') ? 'active' : '' }}">Jurnal Umum</a>
+                                <a href="{{ route('chart-of-accounts.index') }}" class="nav-link {{ request()->routeIs('chart-of-accounts.*') ? 'active' : '' }}"><i class="bi bi-diagram-3"></i> Chart of Accounts</a>
+                                <a href="{{ route('journal-entries.index') }}" class="nav-link {{ request()->routeIs('journal-entries.*') ? 'active' : '' }}"><i class="bi bi-journal-text"></i> Jurnal Umum</a>
+                                <a href="{{ route('reports.finance') }}" class="nav-link {{ request()->routeIs('reports.finance') ? 'active' : '' }}"><i class="bi bi-graph-up-arrow"></i> Cost Center & Case-Mix</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 16. Aset & Logistik (Asset & Procurement) --}}
+            {{-- Klaim BPJS --}}
             <div class="menu-group">
-                @php($logOpen = request()->is('assets*','purchase-orders*'))
-                <div class="accordion" id="menuLog">
+                @php($claimOpen = request()->is('insurance-claims*'))
+                <div class="accordion" id="menuClaim">
                     <div class="accordion-item">
-                        <button type="button" class="accordion-button {{ $logOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseLog" aria-expanded="{{ $logOpen ? 'true' : 'false' }}" aria-controls="collapseLog">
-                            <i class="bi bi-box-seam"></i> 15. Aset & Logistik
+                        <button type="button" class="accordion-button {{ $claimOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseClaim" aria-expanded="{{ $claimOpen ? 'true' : 'false' }}" aria-controls="collapseClaim">
+                            <i class="bi bi-shield-shaded"></i> Klaim BPJS
                         </button>
-                        <div id="collapseLog" class="accordion-collapse collapse {{ $logOpen ? 'show' : '' }}">
+                        <div id="collapseClaim" class="accordion-collapse collapse {{ $claimOpen ? 'show' : '' }}">
                             <div class="accordion-body">
-                                <a href="{{ route('assets.index') }}" class="nav-link {{ request()->routeIs('assets.*') ? 'active' : '' }}">Aset & Inventaris</a>
-                                <a href="{{ route('purchase-orders.index') }}" class="nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">Purchase Order</a>
+                                <a href="{{ route('insurance-claims.index') }}" class="nav-link {{ request()->routeIs('insurance-claims.*') ? 'active' : '' }}"><i class="bi bi-file-earmark-medical"></i> Klaim Asuransi & BPJS</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- 17. Sistem & Integrasi (System & Integration) --}}
+            {{-- ════════════ 👥 SDM & OPERASIONAL ════════════ --}}
             <div class="menu-group">
-                <div class="menu-group-header">⚙️ Sistem & Integrasi</div>
+                <div class="menu-group-header"><i class="bi bi-people"></i> SDM & Operasional</div>
+            </div>
+
+            {{-- SDM & Master Data --}}
+            <div class="menu-group">
+                @php($masterOpen = request()->is('doctors*','employees*','users*','departments*','staff-schedules*','polyclinics*'))
+                <div class="accordion" id="menuMaster">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $masterOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseMaster" aria-expanded="{{ $masterOpen ? 'true' : 'false' }}" aria-controls="collapseMaster">
+                            <i class="bi bi-people-fill"></i> SDM & Master Data
+                        </button>
+                        <div id="collapseMaster" class="accordion-collapse collapse {{ $masterOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('doctors.index') }}" class="nav-link {{ request()->routeIs('doctors.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i> Dokter</a>
+                                <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}"><i class="bi bi-person-workspace"></i> Karyawan</a>
+                                <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="bi bi-person-gear"></i> Pengguna Sistem</a>
+                                <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}"><i class="bi bi-diagram-2"></i> Departemen</a>
+                                <a href="{{ route('polyclinics.index') }}" class="nav-link {{ request()->routeIs('polyclinics.*') ? 'active' : '' }}"><i class="bi bi-hospital"></i> Polyclinic / Poli</a>
+                                <a href="{{ route('staff-schedules.index') }}" class="nav-link {{ request()->routeIs('staff-schedules.*') ? 'active' : '' }}"><i class="bi bi-calendar3"></i> Jadwal Staff</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- HR Operasional --}}
+            <div class="menu-group">
+                @php($hrOpsOpen = request()->is('attendances*','salaries*','leaves*'))
+                <div class="accordion" id="menuHROps">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $hrOpsOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseHROps" aria-expanded="{{ $hrOpsOpen ? 'true' : 'false' }}" aria-controls="collapseHROps">
+                            <i class="bi bi-person-workspace"></i> HR Operasional
+                        </button>
+                        <div id="collapseHROps" class="accordion-collapse collapse {{ $hrOpsOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('attendances.index') }}" class="nav-link {{ request()->routeIs('attendances.*') ? 'active' : '' }}"><i class="bi bi-fingerprint"></i> Absensi</a>
+                                <a href="{{ route('salaries.index') }}" class="nav-link {{ request()->routeIs('salaries.*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Penggajian</a>
+                                <a href="{{ route('leaves.index') }}" class="nav-link {{ request()->routeIs('leaves.*') ? 'active' : '' }}"><i class="bi bi-calendar-x"></i> Cuti & Izin</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ════════════ 📋 MUTU & KEPATUHAN ════════════ --}}
+            <div class="menu-group">
+                <div class="menu-group-header"><i class="bi bi-shield-check"></i> Mutu & Kepatuhan</div>
+            </div>
+
+            {{-- Mutu & Audit --}}
+            <div class="menu-group">
+                @php($qualOpen = request()->is('patient-safety-incidents*','infection-surveillances*','clinical-pathways*','equipment-maintenances*'))
+                <div class="accordion" id="menuQual">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $qualOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseQual" aria-expanded="{{ $qualOpen ? 'true' : 'false' }}" aria-controls="collapseQual">
+                            <i class="bi bi-shield-check"></i> Mutu & Audit
+                        </button>
+                        <div id="collapseQual" class="accordion-collapse collapse {{ $qualOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('patient-safety-incidents.index') }}" class="nav-link {{ request()->routeIs('patient-safety-incidents.*') ? 'active' : '' }}"><i class="bi bi-exclamation-triangle"></i> Insiden Keselamatan (IKP)</a>
+                                <a href="{{ route('infection-surveillances.index') }}" class="nav-link {{ request()->routeIs('infection-surveillances.*') ? 'active' : '' }}"><i class="bi bi-virus"></i> Surveilans Infeksi (HAIs)</a>
+                                <a href="{{ route('clinical-pathways.index') }}" class="nav-link {{ request()->routeIs('clinical-pathways.*') ? 'active' : '' }}"><i class="bi bi-diagram-3"></i> Clinical Pathway</a>
+                                <a href="{{ route('equipment-maintenances.index') }}" class="nav-link {{ request()->routeIs('equipment-maintenances.*') ? 'active' : '' }}"><i class="bi bi-tools"></i> Maintenance Alat</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kepuasan Pasien --}}
+            <div class="menu-group">
+                @php($satisOpen = request()->is('patient-feedbacks*','activity-logs*'))
+                <div class="accordion" id="menuSatis">
+                    <div class="accordion-item">
+                        <button type="button" class="accordion-button {{ $satisOpen ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#collapseSatis" aria-expanded="{{ $satisOpen ? 'true' : 'false' }}" aria-controls="collapseSatis">
+                            <i class="bi bi-emoji-smile"></i> Kepuasan Pasien
+                        </button>
+                        <div id="collapseSatis" class="accordion-collapse collapse {{ $satisOpen ? 'show' : '' }}">
+                            <div class="accordion-body">
+                                <a href="{{ route('patient-feedbacks.index') }}" class="nav-link {{ request()->routeIs('patient-feedbacks.*') ? 'active' : '' }}"><i class="bi bi-chat-heart"></i> Feedback Pasien</a>
+                                @if(in_array(Auth::user()?->role, ['developer','admin','director']))
+                                <a href="{{ route('activity-logs.index') }}" class="nav-link {{ request()->routeIs('activity-logs.*') ? 'active' : '' }}"><i class="bi bi-clock-history"></i> Log Aktivitas (Audit)</a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ════════════ ⚙️ SISTEM & INTEGRASI ════════════ --}}
+            <div class="menu-group">
+                <div class="menu-group-header"><i class="bi bi-gear-fill"></i> Sistem & Integrasi</div>
                 <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') || request()->routeIs('settings.update') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> Pengaturan
                 </a>
@@ -1344,7 +1409,7 @@
                     <i class="bi bi-shield-shaded"></i> Integrasi BPJS
                 </a>
                 <a href="{{ route('settings.satusehat') }}" class="nav-link {{ request()->routeIs('settings.satusehat') || request()->routeIs('settings.satusehat.update') ? 'active' : '' }}">
-                    <i class="bi bi-link-45deg"></i> Satu Sehat
+                    <i class="bi bi-link-45deg"></i> SATUSEHAT
                 </a>
                 @if(in_array(Auth::user()?->role, ['developer','admin']))
                 <a href="{{ route('cms.index') }}" class="nav-link {{ request()->routeIs('cms.*') ? 'active' : '' }}">
@@ -1422,34 +1487,48 @@
                 <div style="position:relative;">
                     <button class="top-action" onclick="toggleNotif()" title="Notifikasi" id="notifBtn">
                         <i class="bi bi-bell"></i>
-                        <span class="badge-dot"></span>
+                        @if(($adminNotif['total'] ?? 0) > 0)<span class="badge-dot"></span>@endif
                     </button>
                     <div class="notif-dropdown" id="notifDropdown">
-                        <div style="padding:0.8rem 1rem;font-weight:700;font-size:0.82rem;border-bottom:1px solid var(--border);">Notifikasi</div>
-                        <div class="notif-item">
+                        <div style="padding:0.8rem 1rem;font-weight:700;font-size:0.82rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+                            <span>Notifikasi</span>
+                            <span class="badge bg-danger">{{ $adminNotif['total'] ?? 0 }}</span>
+                        </div>
+                        <a href="{{ route('emergencies.index') }}" class="notif-item text-decoration-none text-reset" style="display:flex;">
                             <div class="notif-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><i class="bi bi-exclamation-triangle"></i></div>
                             <div>
-                                <div style="font-weight:600;">IGD Pasien Baru</div>
-                                <div style="font-size:0.72rem;color:var(--text-muted);">Pasien darurat masuk IGD</div>
-                                <div style="font-size:0.68rem;color:var(--text-light);">Baru saja</div>
+                                <div style="font-weight:600;">IGD Kritis (Merah)</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">{{ $adminNotif['igd_kritis'] ?? 0 }} pasien butuh penanganan segera</div>
                             </div>
-                        </div>
-                        <div class="notif-item">
+                        </a>
+                        <a href="{{ route('drugs.index') }}" class="notif-item text-decoration-none text-reset" style="display:flex;">
                             <div class="notif-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="bi bi-capsule"></i></div>
                             <div>
                                 <div style="font-weight:600;">Stok Obat Menipis</div>
-                                <div style="font-size:0.72rem;color:var(--text-muted);">3 item di bawah threshold</div>
-                                <div style="font-size:0.68rem;color:var(--text-light);">5 menit lalu</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">{{ $adminNotif['stok_obat'] ?? 0 }} item di bawah threshold</div>
                             </div>
-                        </div>
-                        <div class="notif-item">
-                            <div class="notif-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="bi bi-calendar-check"></i></div>
+                        </a>
+                        <a href="{{ route('insurance-claims.index') }}" class="notif-item text-decoration-none text-reset" style="display:flex;">
+                            <div class="notif-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="bi bi-shield-shaded"></i></div>
                             <div>
-                                <div style="font-weight:600;">Appointment Baru</div>
-                                <div style="font-size:0.72rem;color:var(--text-muted);">Pasien baru mendaftar online</div>
-                                <div style="font-size:0.68rem;color:var(--text-light);">12 menit lalu</div>
+                                <div style="font-weight:600;">Klaim BPJS Pending</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">{{ $adminNotif['klaim'] ?? 0 }} klaim menunggu proses</div>
                             </div>
-                        </div>
+                        </a>
+                        <a href="{{ route('referrals.index') }}" class="notif-item text-decoration-none text-reset" style="display:flex;">
+                            <div class="notif-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-signpost-split"></i></div>
+                            <div>
+                                <div style="font-weight:600;">Rujukan Pending</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">{{ $adminNotif['rujukan'] ?? 0 }} rujukan perlu ditinjau</div>
+                            </div>
+                        </a>
+                        <a href="{{ route('lab-tests.index') }}" class="notif-item text-decoration-none text-reset" style="display:flex;">
+                            <div class="notif-icon" style="background:rgba(6,182,212,0.1);color:#06b6d4;"><i class="bi bi-eyedropper"></i></div>
+                            <div>
+                                <div style="font-weight:600;">Hasil Lab Tertunda</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">{{ $adminNotif['lab'] ?? 0 }} pemeriksaan dalam proses</div>
+                            </div>
+                        </a>
                     </div>
                 </div>
 

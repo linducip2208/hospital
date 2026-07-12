@@ -15,7 +15,7 @@ class MedicalRecord extends Model
 
     protected $fillable = [
         'patient_id', 'doctor_id', 'appointment_id', 'clinical_pathway_id',
-        'diagnosis', 'action', 'medicine',
+        'diagnosis', 'icd10_code', 'icd10_name', 'action', 'medicine',
         'vital_signs', 'lab_results', 'notes',
     ];
 
