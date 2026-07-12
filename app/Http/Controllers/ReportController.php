@@ -2,60 +2,72 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Appointment;
-use App\Models\Doctor;
-use App\Models\Drug;
-use App\Models\Patient;
-use App\Models\Payment;
-use App\Models\Room;
-use App\Models\Treatment;
+use App\Services\ReportService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response as ResponseFactory;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
+    public function __construct(protected ReportService $service) {}
+
+    protected function range(Request $request): array
+    {
+        $from = $request->filled('from')
+            ? Carbon::parse($request->get('from'))->startOfDay()
+            : now()->startOfMonth();
+        $to = $request->filled('to')
+            ? Carbon::parse($request->get('to'))->endOfDay()
+            : now()->endOfDay();
+        $groupBy = in_array($request->get('group_by'), ['day', 'month', 'year']) ? $request->get('group_by') : 'month';
+
+        return [$from, $to, $groupBy];
+    }
+
     public function index(Request $request): View
     {
-        $total_patients = Patient::count();
-        $total_doctors = Doctor::count();
-        $total_appointments = Appointment::count();
-        $total_payments = Payment::where('status', 'completed')->sum('amount');
-        $total_drugs = Drug::count();
-        $total_rooms = Room::count();
+        [$from, $to, $groupBy] = $this->range($request);
+        $data = $this->service->financialReport($from, $to, $groupBy);
 
-        $revenue_by_month = Payment::where('status', 'completed')
-            ->selectRaw('SUM(amount) as total, MONTH(created_at) month, YEAR(created_at) year')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
+        return view('reports.index', $data);
+    }
 
-        $appointments_by_status = Appointment::selectRaw('status, COUNT(*) count')
-            ->groupBy('status')
-            ->get();
+    public function pdf(Request $request): View
+    {
+        [$from, $to, $groupBy] = $this->range($request);
+        $data = $this->service->financialReport($from, $to, $groupBy);
 
-        $top_treatments = Treatment::withCount('appointments')
-            ->orderByDesc('appointments_count')
-            ->take(5)
-            ->get();
+        return view('reports.pdf', $data);
+    }
 
-        $recent_payments = Payment::with('patient')
-            ->latest()
-            ->take(10)
-            ->get();
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        [$from, $to] = $this->range($request);
+        $payments = $this->service->recentPayments($from, $to, 100000);
 
-        return view('reports.index', compact(
-            'total_patients',
-            'total_doctors',
-            'total_appointments',
-            'total_payments',
-            'total_drugs',
-            'total_rooms',
-            'revenue_by_month',
-            'appointments_by_status',
-            'top_treatments',
-            'recent_payments'
-        ));
+        $filename = 'laporan-pembayaran-'.$from->format('Ymd').'-'.$to->format('Ymd').'.csv';
+
+        return ResponseFactory::streamDownload(function () use ($payments) {
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($out, ['No. Invoice', 'Tanggal', 'Pasien', 'Metode', 'Subtotal', 'Diskon', 'Pajak', 'Total', 'Dibayar', 'Status']);
+            foreach ($payments as $p) {
+                fputcsv($out, [
+                    $p->invoice_number,
+                    $p->created_at?->format('Y-m-d H:i'),
+                    $p->patient?->name ?? $p->appointment?->patient?->name ?? '-',
+                    $p->payment_method,
+                    $p->subtotal,
+                    $p->discount,
+                    $p->tax,
+                    $p->amount,
+                    $p->paid_amount,
+                    $p->status,
+                ]);
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

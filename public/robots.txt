@@ -1,2 +1,19 @@
 User-agent: *
-Disallow:
+Allow: /$
+Allow: /docs
+Allow: /blog
+Allow: /best-
+Allow: /alternatif-
+Allow: /bandingkan/
+Allow: /fitur-
+Allow: /aplikasi-
+Allow: /beli-
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /cms
+Disallow: /admin
+Disallow: /portal
+Disallow: /__pair
+Disallow: /api
+
+Sitemap: /sitemap.xml

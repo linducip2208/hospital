@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\CheckPoliAccess;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\RequirePair;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,12 +15,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->appendToGroup('web', \App\Http\Middleware\RequirePair::class);
+        $middleware->appendToGroup('web', RequirePair::class);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
-            'poli.access' => \App\Http\Middleware\CheckPoliAccess::class,
+            'role' => CheckRole::class,
+            'poli.access' => CheckPoliAccess::class,
         ]);
+
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('portal', 'portal/*')) {
+                return route('portal.login');
+            }
+
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

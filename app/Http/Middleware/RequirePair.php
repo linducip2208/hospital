@@ -23,7 +23,7 @@ class RequirePair
         }
 
         $domain = strtolower($request->getHost());
-        $data   = $this->client->verify($domain);
+        $data = $this->client->verify($domain);
 
         if ($data) {
             $request->attributes->set('license', $data);
@@ -37,7 +37,7 @@ class RequirePair
 
     private function shouldBypass(Request $request): bool
     {
-        $path = '/' . ltrim($request->path(), '/');
+        $path = '/'.ltrim($request->path(), '/');
 
         // Always allow the wizard itself
         if (str_starts_with($path, '/__pair')) {
@@ -53,10 +53,41 @@ class RequirePair
             return true;
         }
 
+        // Public marketing & SEO surface — must be crawlable before pairing
+        if ($this->isPublicSeoPath($path)) {
+            return true;
+        }
+
         // Localhost dev bypass
         if (config('license.dev_bypass') && app()->environment('local')) {
             $host = $request->getHost();
             if ($this->isDevHost($host)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isPublicSeoPath(string $path): bool
+    {
+        if ($path === '/') {
+            return true;
+        }
+
+        $exact = ['/docs', '/robots.txt', '/sitemap.xml', '/blog'];
+        if (in_array($path, $exact, true)) {
+            return true;
+        }
+
+        $prefixes = [
+            '/blog/', '/sitemap-', '/best-', '/alternatif-', '/bandingkan/',
+            '/fitur-', '/aplikasi-', '/beli-', '/source-code', '/software-',
+            '/jasa-', '/sistem-informasi', '/marketing/', '/indexnow-key.txt',
+            '/portal',
+        ];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($path, $prefix)) {
                 return true;
             }
         }

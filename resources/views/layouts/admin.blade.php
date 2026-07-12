@@ -1353,6 +1353,9 @@
                         <span class="count-badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc;">DEV</span>
                     @endif
                 </a>
+                <a href="{{ route('admin.blog.posts.index') }}" class="nav-link {{ request()->routeIs('admin.blog.*') ? 'active' : '' }}">
+                    <i class="bi bi-newspaper"></i> Blog & Artikel
+                </a>
                 @endif
                 <a href="{{ route('tutorial') }}" class="nav-link {{ request()->routeIs('tutorial') ? 'active' : '' }}">
                     <i class="bi bi-book"></i> Tutorial

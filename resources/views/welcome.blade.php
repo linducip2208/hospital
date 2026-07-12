@@ -411,7 +411,8 @@
                 <a href="#modul-lainnya">Semua Modul</a>
                 <a href="#video">Demo</a>
                 <a href="#testimoni">Testimoni</a>
-                <a href="#blog">Insights</a>
+                <a href="{{ route('blog.index') }}">Blog</a>
+                <a href="{{ route('portal.login') }}">Portal Pasien</a>
                 @auth
                     <a href="{{ route('dashboard') }}" class="btn btn-primary">Dashboard</a>
                 @else
@@ -1012,7 +1013,8 @@
             <div>
                 <h4>Sumber Daya</h4>
                 <ul class="footer-links">
-                    <li><a href="#blog">Insights</a></li>
+                    <li><a href="{{ route('blog.index') }}">Blog</a></li>
+                    <li><a href="{{ route('portal.login') }}">Portal Pasien</a></li>
                     <li><a href="#testimoni">Testimoni</a></li>
                     <li><a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener">Hubungi Kami</a></li>
                     @guest

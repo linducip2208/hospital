@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\AmbulanceCallController;
 use App\Http\Controllers\AmbulanceController;
 use App\Http\Controllers\AncRecordController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BabyImmunizationController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BloodDonationController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\ClinicalPathwayController;
@@ -35,8 +38,8 @@ use App\Http\Controllers\LabTestController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MaternityController;
 use App\Http\Controllers\MedicalCertificateController;
-use App\Http\Controllers\MedicationAdministrationController;
 use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\MedicationAdministrationController;
 use App\Http\Controllers\NurseAssignmentController;
 use App\Http\Controllers\NursingCareController;
 use App\Http\Controllers\OdontogramController;
@@ -50,6 +53,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PolyclinicController;
 use App\Http\Controllers\PostnatalRecordController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\ProgrammaticSeoController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\RadiologyController;
@@ -59,6 +63,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftHandoverController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaffScheduleController;
 use App\Http\Controllers\SurgeryController;
 use App\Http\Controllers\TelemedicineSessionController;
@@ -76,8 +81,8 @@ Route::get('/', function () {
     $stats = Cache::remember('welcome.stats', now()->addHour(), function () {
         return [
             'patients' => Patient::count(),
-            'doctors'  => Doctor::where('status', 'active')->count(),
-            'polys'    => Polyclinic::where('is_active', true)->count(),
+            'doctors' => Doctor::where('status', 'active')->count(),
+            'polys' => Polyclinic::where('is_active', true)->count(),
         ];
     });
 
@@ -87,8 +92,48 @@ Route::get('/', function () {
 // Public documentation
 Route::get('/docs', fn () => view('docs'))->name('docs');
 
+// ============================================================
+// SEO: Sitemap & robots.txt (dinamis)
+// ============================================================
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/sitemap-{group}.xml', [SitemapController::class, 'group'])
+    ->where('group', '[a-z0-9\-]+')->name('sitemap.group');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+// ============================================================
+// Blog (publik)
+// ============================================================
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed');
+Route::get('/blog/category/{category}', [BlogController::class, 'category'])->name('blog.category');
+Route::get('/blog/{post}', [BlogController::class, 'show'])->name('blog.show');
+
+// ============================================================
+// Programmatic SEO
+// ============================================================
+Route::get('/alternatif-{competitor}', [ProgrammaticSeoController::class, 'alternative'])
+    ->where('competitor', '[a-z0-9\-]+')->name('pseo.alternative');
+Route::get('/bandingkan/{pair}', [ProgrammaticSeoController::class, 'compare'])
+    ->where('pair', '[a-z0-9\-]+vs[a-z0-9\-]+')->name('pseo.compare');
+Route::get('/best-{slug}', [ProgrammaticSeoController::class, 'best'])
+    ->where('slug', '[a-z0-9\-]+')->name('pseo.best');
+Route::get('/fitur-{slug}', [ProgrammaticSeoController::class, 'feature'])
+    ->where('slug', '[a-z0-9\-]+')->name('pseo.feature');
+Route::get('/aplikasi-poli-{slug}', [ProgrammaticSeoController::class, 'specialtyCity'])
+    ->where('slug', '[a-z0-9\-]+')->name('pseo.specialty.city');
+Route::get('/aplikasi-{slug}', [ProgrammaticSeoController::class, 'facilityCity'])
+    ->where('slug', '[a-z0-9\-]+')->name('pseo.facility.city');
+// Source-code sales (generic handler for many keyword patterns)
+Route::get('/beli-{slug}', [ProgrammaticSeoController::class, 'sourceCode'])
+    ->where('slug', '[a-z0-9\-]+')->name('pseo.sc.beli');
+Route::get('/{slug}', [ProgrammaticSeoController::class, 'sourceCode'])
+    ->where('slug', '(source-code|aplikasi|software|jasa|sistem-informasi)[a-z0-9\-]+')->name('pseo.sc.generic');
+
 // License pairing wizard v3
 require base_path('routes/pair.php');
+
+// Patient self-service portal
+require base_path('routes/portal.php');
 
 // Authentication
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -132,6 +177,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
+    Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
 
     // Tutorial
     Route::get('/tutorial', [TutorialController::class, 'index'])->name('tutorial');
@@ -196,6 +243,15 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/cms/{pageContent}', [PageContentController::class, 'update'])->name('cms.update');
         Route::post('/cms/{pageContent}/toggle', [PageContentController::class, 'toggle'])->name('cms.toggle');
         Route::post('/cms/{pageContent}/reset', [PageContentController::class, 'reset'])->name('cms.reset');
+
+        // Blog management
+        Route::prefix('admin/blog')->name('admin.blog.')->group(function () {
+            Route::get('categories', [BlogCategoryController::class, 'index'])->name('categories.index');
+            Route::post('categories', [BlogCategoryController::class, 'store'])->name('categories.store');
+            Route::put('categories/{category}', [BlogCategoryController::class, 'update'])->name('categories.update');
+            Route::delete('categories/{category}', [BlogCategoryController::class, 'destroy'])->name('categories.destroy');
+            Route::resource('posts', BlogPostController::class)->except(['show']);
+        });
     });
 
     // Keperawatan ERP
@@ -297,7 +353,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('referrals/{referral}/print', [ReferralController::class, 'print'])->name('referrals.print');
     Route::get('lab-tests/{lab_test}/print', [LabTestController::class, 'print'])->name('lab-tests.print');
     Route::get('radiologies/{radiology}/print', [RadiologyController::class, 'print'])->name('radiologies.print');
-    Route::get('surgeries/{surgery}/print', [App\Http\Controllers\SurgeryController::class, 'print'])->name('surgeries.print');
+    Route::get('surgeries/{surgery}/print', [SurgeryController::class, 'print'])->name('surgeries.print');
     Route::get('payments/{payment}/print/receipt', [PaymentController::class, 'printReceipt'])->name('payments.print-receipt');
     Route::get('payments/{payment}/print/bill', [PaymentController::class, 'printBill'])->name('payments.print-bill');
     Route::get('medical-records/{medical_record}/print', [MedicalRecordController::class, 'print'])->name('medical-records.print');
