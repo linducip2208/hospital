@@ -6,6 +6,9 @@ use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\Polyclinic;
 use App\Models\Queue;
+use App\Services\DocumentNumberService;
+use App\Services\EncounterService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,19 +52,25 @@ class QueueController extends Controller
             'polyclinic_id' => 'required|exists:polyclinics,id',
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'nullable|exists:doctors,id',
+            'appointment_id' => 'nullable|exists:appointments,id',
             'notes' => 'nullable|string',
         ]);
 
         $polyclinic = Polyclinic::findOrFail($validated['polyclinic_id']);
+        if (! empty($validated['appointment_id'])) {
+            $appointment = \App\Models\Appointment::findOrFail($validated['appointment_id']);
+            abort_unless($appointment->patient_id === (int) $validated['patient_id'], 422, 'Appointment bukan milik pasien ini.');
+            if ($appointment->polyclinic_id && $appointment->polyclinic_id !== (int) $validated['polyclinic_id']) {
+                abort(422, 'Poli antrian harus sama dengan poli appointment.');
+            }
+        }
 
-        $todayCount = Queue::where('polyclinic_id', $validated['polyclinic_id'])
-            ->whereDate('created_at', today())
-            ->count();
-
-        $validated['queue_number'] = $polyclinic->code . '-' . str_pad($todayCount + 1, 3, '0', STR_PAD_LEFT);
-        $validated['status'] = 'waiting';
-
-        Queue::create($validated);
+        DB::transaction(function () use (&$validated, $polyclinic) {
+            $validated['queue_number'] = app(DocumentNumberService::class)->next('queue:'.$polyclinic->id.':'.today()->format('Ymd'), $polyclinic->code, 3);
+            $validated['status'] = 'waiting';
+            $queue = Queue::create($validated);
+            app(EncounterService::class)->fromQueue($queue, auth()->id());
+        });
 
         return redirect()->route('queues.index')->with('success', 'Antrian berhasil ditambahkan.');
     }
@@ -106,6 +115,8 @@ class QueueController extends Controller
 
     public function call(Queue $queue): RedirectResponse
     {
+        $encounter = app(EncounterService::class)->fromQueue($queue, auth()->id());
+        app(EncounterService::class)->start($encounter);
         $queue->update([
             'status' => 'called',
             'called_at' => now(),
@@ -120,6 +131,9 @@ class QueueController extends Controller
             'status' => 'completed',
             'completed_at' => now(),
         ]);
+        if ($queue->encounter) {
+            app(EncounterService::class)->complete($queue->encounter);
+        }
 
         return back()->with('success', 'Antrian ' . $queue->queue_number . ' telah selesai.');
     }

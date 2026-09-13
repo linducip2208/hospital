@@ -77,4 +77,10 @@ class Patient extends Authenticatable
     {
         return $this->hasMany(Referral::class);
     }
+
+    public function encounters(): HasMany { return $this->hasMany(Encounter::class); }
+    public function diagnoses(): HasMany { return $this->hasMany(Diagnosis::class); }
+    public function admissions(): HasMany { return $this->hasMany(Admission::class); }
+    public function bills(): HasMany { return $this->hasMany(Bill::class); }
+    public function dispensings(): HasMany { return $this->hasMany(Dispensing::class); }
 }

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Patient;
 use App\Services\SatuSehatClient;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class SatuSehatWebhookController extends Controller
 {
-    public function receive(Request $request): \Illuminate\Http\JsonResponse
+    public function receive(Request $request): JsonResponse
     {
         $client = new SatuSehatClient;
 
@@ -20,10 +22,10 @@ class SatuSehatWebhookController extends Controller
         $payload = $request->getContent();
         $signature = $request->header('X-Satusehat-Signature') ?? '';
 
-        if (! empty($signature) && ! $client->verifyWebhookSignature($payload, $signature)) {
+        if (empty($signature) || ! $client->verifyWebhookSignature($payload, $signature)) {
             Log::warning('SatuSehat webhook received with invalid signature', [
                 'ip' => $request->ip(),
-                'signature' => substr($signature, 0, 16) . '...',
+                'signature_present' => ! empty($signature),
             ]);
 
             return response()->json(['error' => 'Invalid signature'], 403);
@@ -72,23 +74,22 @@ class SatuSehatWebhookController extends Controller
         $name = '';
         foreach ($data['name'] ?? [] as $n) {
             if (($n['use'] ?? '') === 'official') {
-                $name = implode(' ', $n['given'] ?? []) . ' ' . ($n['family'] ?? '');
+                $name = implode(' ', $n['given'] ?? []).' '.($n['family'] ?? '');
                 break;
             }
         }
         if (empty($name) && ! empty($data['name'])) {
             $n = $data['name'][0];
-            $name = implode(' ', $n['given'] ?? []) . ' ' . ($n['family'] ?? '');
+            $name = implode(' ', $n['given'] ?? []).' '.($n['family'] ?? '');
         }
 
         Log::info('SatuSehat webhook — Patient sync', [
             'ihi' => $ihi,
-            'nik' => $nik,
-            'name' => trim($name),
+            'identifier_present' => ! empty($nik),
         ]);
 
         if ($nik) {
-            \App\Models\Patient::where('nik', $nik)->update(['satusehat_id' => $ihi]);
+            Patient::where('nik', $nik)->update(['satusehat_id' => $ihi]);
         }
     }
 

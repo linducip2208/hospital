@@ -48,6 +48,7 @@ class ActivityLogger
             'category' => $category,
             'properties' => $properties,
             'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
     }
 

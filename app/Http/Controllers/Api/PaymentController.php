@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bill;
 use App\Models\Payment;
+use App\Services\BillingService;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('billing.view'), 403);
         $query = Payment::with(['patient:id,name', 'appointment:id,appointment_date']);
 
         if ($request->has('patient_id')) {
@@ -41,9 +44,11 @@ class PaymentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('payments.receive'), 403);
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'appointment_id' => 'nullable|exists:appointments,id',
+            'bill_id' => 'nullable|exists:bills,id',
             'subtotal' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
@@ -53,11 +58,22 @@ class PaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        if (! empty($validated['bill_id'])) {
+            $payment = app(BillingService::class)->receivePayment(Bill::findOrFail($validated['bill_id']), [
+                'amount' => $validated['paid_amount'],
+                'payment_method' => $validated['payment_method'] ?? 'cash',
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            return response()->json($payment->load(['patient:id,name', 'appointment:id,appointment_date']), 201);
+        }
+
         $validated['discount'] ??= 0;
         $validated['tax'] ??= 0;
         $validated['amount'] = $validated['subtotal'] - $validated['discount'] + $validated['tax'];
         $validated['change_amount'] = max(0, $validated['paid_amount'] - $validated['amount']);
-        $validated['invoice_number'] = $this->generateInvoiceNumber();
+        // Legacy standalone payment payload remains supported for existing clients.
+        $validated['invoice_number'] = app(DocumentNumberService::class)->next('legacy_invoice_api', 'INV', 5);
 
         $payment = Payment::create($validated);
         $payment->load(['patient:id,name', 'appointment:id,appointment_date']);
@@ -67,12 +83,15 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): JsonResponse
     {
+        abort_unless(request()->user()?->hasPermission('billing.view'), 403);
         $payment->load(['patient', 'appointment']);
+
         return response()->json($payment);
     }
 
     public function update(Request $request, Payment $payment): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('billing.manage'), 403);
         $validated = $request->validate([
             'patient_id' => 'sometimes|exists:patients,id',
             'appointment_id' => 'nullable|exists:appointments,id',
@@ -103,19 +122,9 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): JsonResponse
     {
+        abort_unless(request()->user()?->hasPermission('billing.manage'), 403);
         $payment->delete();
+
         return response()->json(null, 204);
-    }
-
-    private function generateInvoiceNumber(): string
-    {
-        $prefix = 'INV/' . now()->format('Y/m');
-        $last = Payment::where('invoice_number', 'like', $prefix . '/%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        $next = $last ? (int) Str::afterLast($last->invoice_number, '/') + 1 : 1;
-
-        return $prefix . '/' . str_pad($next, 5, '0', STR_PAD_LEFT);
     }
 }

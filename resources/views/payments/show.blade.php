@@ -32,6 +32,9 @@
             <tr><th>Catatan</th><td>{{ $payment->notes }}</td></tr>
             @endif
         </table>
+        @if($payment->status === 'completed')
+        <form method="POST" action="{{ route('payments.refund',$payment) }}" class="row g-2 mt-3">@csrf<div class="col-md-4"><input type="number" name="amount" class="form-control" min="0.01" max="{{ $payment->paid_amount }}" step="0.01" placeholder="Nominal refund" required></div><div class="col-md-5"><input name="reason" class="form-control" placeholder="Alasan refund" required></div><div class="col-md-3"><button class="btn btn-outline-danger w-100">Proses Refund</button></div></form>
+        @endif
     </div>
 </div>
 @endsection

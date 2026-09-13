@@ -7,6 +7,9 @@ use App\Models\Department;
 use App\Models\Doctor;
 use App\Models\Drug;
 use App\Models\InsuranceClaim;
+use App\Models\Emergency;
+use App\Models\HospitalBed;
+use App\Models\LabTest;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\Room;
@@ -130,6 +133,31 @@ class ReportService
             'costCenter' => $this->costCenter($from, $to),
             'billingBreakdown' => $this->billingBreakdown($from, $to),
             'caseMix' => $this->caseMix($from, $to),
+        ];
+    }
+
+    public function operationalReport(Carbon $from, Carbon $to): array
+    {
+        $appointments = Appointment::whereBetween('appointment_date', [$from, $to]);
+        $emergencies = Emergency::whereBetween('created_at', [$from, $to]);
+        $labTests = LabTest::whereBetween('created_at', [$from, $to]);
+
+        return [
+            'from' => $from,
+            'to' => $to,
+            'stats' => [
+                'appointments' => (clone $appointments)->count(),
+                'completed_appointments' => (clone $appointments)->where('status', 'completed')->count(),
+                'emergencies' => (clone $emergencies)->count(),
+                'pending_lab_tests' => (clone $labTests)->whereIn('status', ['pending', 'in_progress'])->count(),
+                'occupied_beds' => HospitalBed::where('status', 'occupied')->count(),
+                'low_stock_drugs' => Drug::where('is_active', true)->where('stock', '<=', 10)->count(),
+            ],
+            'appointmentStatus' => (clone $appointments)->selectRaw('status, COUNT(*) total')->groupBy('status')->get(),
+            'emergencyStatus' => (clone $emergencies)->selectRaw('status, COUNT(*) total')->groupBy('status')->get(),
+            'labStatus' => (clone $labTests)->selectRaw('status, COUNT(*) total')->groupBy('status')->get(),
+            'recentAppointments' => (clone $appointments)->with(['patient:id,name', 'doctor:id,name'])
+                ->latest('appointment_date')->limit(12)->get(),
         ];
     }
 }

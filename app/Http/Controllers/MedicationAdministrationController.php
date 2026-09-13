@@ -6,6 +6,7 @@ use App\Models\Drug;
 use App\Models\MedicationAdministration;
 use App\Models\Patient;
 use App\Models\User;
+use App\Models\Prescription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -39,12 +40,20 @@ class MedicationAdministrationController extends Controller
             'patient_id' => 'required|exists:patients,id',
             'nurse_id' => 'required|exists:users,id',
             'drug_id' => 'nullable|exists:drugs,id',
+            'encounter_id' => 'nullable|exists:encounters,id',
+            'prescription_id' => 'nullable|exists:prescriptions,id',
+            'prescription_item_id' => 'nullable|exists:prescription_items,id',
             'drug_name' => 'nullable|string|max:255',
             'dosage' => 'nullable|string|max:255',
             'route' => 'nullable|string|max:255',
             'administered_at' => 'required|date',
             'notes' => 'nullable|string',
         ]);
+        if (! empty($validated['prescription_id'])) {
+            $prescription = Prescription::findOrFail($validated['prescription_id']);
+            abort_unless($prescription->patient_id === (int) $validated['patient_id'], 422, 'Resep bukan milik pasien ini.');
+            $validated['encounter_id'] ??= $prescription->encounter_id;
+        }
         MedicationAdministration::create($validated);
         return redirect()->route('medication-administrations.index')->with('success', 'Pemberian obat berhasil dicatat.');
     }

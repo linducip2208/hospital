@@ -273,6 +273,16 @@
             transition: background 0.15s;
         }
         .login-cta:hover { background: var(--primary-dark); color: white; }
+        .docs-shot-row { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: 2rem; align-items: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-100); }
+        .docs-shot-row.reverse .docs-shot-frame { order: 2; }
+        .docs-shot-frame { overflow: hidden; border: 1px solid var(--gray-200); border-radius: 12px; background: #f8fafc; box-shadow: 0 14px 34px rgba(15,23,42,.10); }
+        .docs-shot-chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--gray-200); background: #fff; }
+        .docs-shot-chrome span { width: 8px; height: 8px; border-radius: 50%; }
+        .docs-shot-chrome span:nth-child(1) { background: #fb7185; } .docs-shot-chrome span:nth-child(2) { background: #fbbf24; } .docs-shot-chrome span:nth-child(3) { background: #34d399; }
+        .docs-shot-url { flex: 1; overflow: hidden; margin-left: 8px; padding: 4px 9px; border: 1px solid var(--gray-200); border-radius: 5px; color: var(--gray-500); font: 600 .67rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; text-overflow: ellipsis; }
+        .docs-shot-frame img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; }
+        .docs-shot-copy h3 { margin-top: 0; color: var(--gray-900); } .docs-shot-copy ul { margin-bottom: 0; }
+        @media (max-width: 900px) { .docs-shot-row { grid-template-columns: 1fr; } .docs-shot-row.reverse .docs-shot-frame { order: 0; } }
         @media (max-width: 640px) {
             .demo-table-wrap { overflow-x: auto; }
             .demo-table { min-width: 560px; }
@@ -326,7 +336,8 @@
         <a href="#akuntansi">14. Akuntansi</a>
         <a href="#logistik">15. Logistik</a>
         <a href="#pengaturan">16. Pengaturan</a>
-        <a href="#faq">17. FAQ</a>
+        <a href="#screenshot-fitur">17. Screenshot Fitur</a>
+        <a href="#faq">18. FAQ</a>
     </aside>
 
     <main class="docs-content">
@@ -856,9 +867,34 @@
             </ul>
         </section>
 
-        {{-- 17. FAQ --}}
-        <section id="faq" class="docs-section">
+        {{-- 17. Screenshot fitur real dari aplikasi --}}
+        <section id="screenshot-fitur" class="docs-section">
             <span class="docs-badge">Bab 17</span>
+            <h2>Screenshot Fitur Real</h2>
+            <p>Seluruh gambar berikut diambil dari aplikasi yang berjalan menggunakan data demo. Gunakan bagian ini sebagai orientasi sebelum masuk ke modul masing-masing.</p>
+            @php
+                $docsFeatures = [
+                    ['file' => 'dashboard.png', 'url' => '/dashboard', 'title' => 'Dashboard Eksekutif', 'description' => 'Pantau indikator penting rumah sakit dari satu layar.', 'bullets' => ['KPI pasien, dokter, appointment, dan pendapatan', 'Okupansi kamar dan stok obat', 'Grafik kunjungan dan poli terpadat', 'Peringatan operasional yang perlu ditindaklanjuti']],
+                    ['file' => 'appointments.png', 'url' => '/appointments', 'title' => 'Appointment & Antrian', 'description' => 'Atur jadwal kunjungan agar petugas dan dokter bekerja dengan konteks yang sama.', 'bullets' => ['Filter tanggal dan status kunjungan', 'Relasi pasien, dokter, poli, dan tindakan', 'Status scheduled hingga completed', 'Akses cepat ke detail pasien']],
+                    ['file' => 'medical-records.png', 'url' => '/medical-records', 'title' => 'Rekam Medis Digital', 'description' => 'Catat perjalanan klinis pasien secara terstruktur dan mudah ditelusuri.', 'bullets' => ['Diagnosis dan kode ICD-10', 'Tindakan dan resep terhubung', 'Riwayat vital signs dan hasil penunjang', 'Soft delete untuk menjaga jejak data']],
+                    ['file' => 'drugs.png', 'url' => '/drugs', 'title' => 'Farmasi & Stok Obat', 'description' => 'Kurangi risiko kekosongan obat dengan visibilitas stok yang jelas.', 'bullets' => ['Stok, satuan, kategori, dan harga', 'Penanda stok rendah', 'Pencarian obat cepat', 'Terhubung dengan resep dan procurement']],
+                    ['file' => 'emergencies.png', 'url' => '/emergencies', 'title' => 'IGD & Triase', 'description' => 'Prioritaskan pasien gawat darurat dengan status triase yang mudah dipantau.', 'bullets' => ['Kategori triase merah hingga hitam', 'Status waiting, treatment, observation', 'Catatan diagnosis dan tindakan', 'Dokumen cetak triase']],
+                    ['file' => 'lab-tests.png', 'url' => '/lab-tests', 'title' => 'Laboratorium', 'description' => 'Kelola permintaan dan hasil pemeriksaan penunjang dalam alur yang terhubung.', 'bullets' => ['Jenis pemeriksaan dan sample type', 'Status proses pemeriksaan', 'Hasil dan tanggal hasil', 'Relasi dokter serta pasien']],
+                    ['file' => 'payments.png', 'url' => '/payments', 'title' => 'Pembayaran & Invoice', 'description' => 'Lacak transaksi dan status pembayaran untuk kebutuhan kasir serta audit.', 'bullets' => ['Nomor invoice dan penjamin', 'Status pending hingga completed', 'Cetak kuitansi dan tagihan', 'Relasi appointment dan rekam medis']],
+                    ['file' => 'journal-entries.png', 'url' => '/journal-entries', 'title' => 'Akuntansi Jurnal', 'description' => 'Jaga pembukuan tetap seimbang dengan jurnal double-entry.', 'bullets' => ['Chart of accounts', 'Debit dan kredit per baris jurnal', 'Validasi keseimbangan jurnal', 'Status draft dan posted']],
+                ];
+            @endphp
+            @foreach($docsFeatures as $feature)
+                <div class="docs-shot-row {{ $loop->even ? 'reverse' : '' }}">
+                    <div class="docs-shot-frame"><div class="docs-shot-chrome"><span></span><span></span><span></span><div class="docs-shot-url">SIMRS Hospital {{ $feature['url'] }}</div></div><img src="{{ asset('marketing/screens/'.$feature['file']) }}" alt="Screenshot {{ $feature['title'] }}" loading="lazy"></div>
+                    <div class="docs-shot-copy"><h3>{{ $feature['title'] }}</h3><p>{{ $feature['description'] }}</p><ul>@foreach($feature['bullets'] as $bullet)<li>{{ $bullet }}</li>@endforeach</ul></div>
+                </div>
+            @endforeach
+        </section>
+
+        {{-- 18. FAQ --}}
+        <section id="faq" class="docs-section">
+            <span class="docs-badge">Bab 18</span>
             <h2>FAQ — Pertanyaan Umum</h2>
 
             <h3>Bagaimana cara reset password?</h3>

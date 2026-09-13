@@ -8,6 +8,7 @@ use App\Models\Patient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Services\LabWorkflowService;
 
 class LabTestController extends Controller
 {
@@ -90,5 +91,25 @@ class LabTestController extends Controller
     {
         $labTest->load(['patient', 'doctor']);
         return view('lab-tests.print', compact('labTest'));
+    }
+
+    public function collect(Request $request, LabTest $labTest, LabWorkflowService $service): RedirectResponse
+    {
+        $data = $request->validate(['specimen' => 'nullable|string|max:255']);
+        $service->collect($labTest, $data['specimen'] ?? null);
+        return back()->with('success', 'Sampel diterima dan accession number dibuat.');
+    }
+
+    public function start(LabTest $labTest, LabWorkflowService $service): RedirectResponse
+    {
+        $service->start($labTest);
+        return back()->with('success', 'Pemeriksaan lab masuk proses.');
+    }
+
+    public function verify(Request $request, LabTest $labTest, LabWorkflowService $service): RedirectResponse
+    {
+        $data = $request->validate(['results' => 'required|string', 'reference_range' => 'nullable|string|max:255', 'unit' => 'nullable|string|max:100', 'abnormal_flag' => 'nullable|string|max:30', 'critical_flag' => 'nullable|boolean', 'notes' => 'nullable|string']);
+        $service->verify($labTest, $data);
+        return back()->with('success', 'Hasil lab diverifikasi dan dipublikasikan.');
     }
 }

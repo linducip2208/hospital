@@ -11,7 +11,7 @@ class MedicationAdministration extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'nurse_id', 'drug_id', 'drug_name',
+        'patient_id', 'nurse_id', 'drug_id', 'drug_name', 'encounter_id', 'prescription_id', 'prescription_item_id',
         'dosage', 'route', 'administered_at', 'notes',
     ];
 
@@ -36,4 +36,8 @@ class MedicationAdministration extends Model
     {
         return $this->belongsTo(Drug::class);
     }
+
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
+    public function prescription(): BelongsTo { return $this->belongsTo(Prescription::class); }
+    public function prescriptionItem(): BelongsTo { return $this->belongsTo(PrescriptionItem::class); }
 }

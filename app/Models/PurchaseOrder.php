@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\DocumentNumberService;
 
 class PurchaseOrder extends Model
 {
@@ -14,7 +15,7 @@ class PurchaseOrder extends Model
 
     protected $fillable = [
         'po_number', 'department_id', 'vendor_id', 'auto_generated', 'supplier_name', 'supplier_phone',
-        'order_date', 'expected_date', 'received_date',
+        'order_date', 'expected_date', 'received_date', 'received_by',
         'subtotal', 'tax', 'total_amount', 'status', 'notes',
     ];
 
@@ -40,10 +41,7 @@ class PurchaseOrder extends Model
     {
         static::creating(function (PurchaseOrder $po) {
             if (empty($po->po_number)) {
-                $date = now()->format('Ymd');
-                $last = static::where('po_number', 'like', "PO-{$date}-%")->latest('id')->first();
-                $seq = $last ? (int) substr($last->po_number, -4) + 1 : 1;
-                $po->po_number = 'PO-'.$date.'-'.str_pad($seq, 4, '0', STR_PAD_LEFT);
+                $po->po_number = app(DocumentNumberService::class)->next('purchase_order', 'PO', 4);
             }
         });
     }

@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\Treatment;
+use App\Services\EncounterService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -44,6 +45,7 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
+            'polyclinic_id' => 'nullable|exists:polyclinics,id',
             'treatment_id' => 'nullable|exists:treatments,id',
             'appointment_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -95,6 +97,14 @@ class AppointmentController extends Controller
         $allowed = ['confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'];
         if (!in_array($status, $allowed)) {
             return back()->with('error', 'Status tidak valid.');
+        }
+        if ($status === 'confirmed') {
+            app(EncounterService::class)->fromAppointment($appointment, auth()->id());
+        } elseif ($status === 'in_progress') {
+            $encounter = $appointment->encounter ?: app(EncounterService::class)->fromAppointment($appointment, auth()->id());
+            app(EncounterService::class)->start($encounter);
+        } elseif ($status === 'completed' && $appointment->encounter) {
+            app(EncounterService::class)->complete($appointment->encounter);
         }
         $appointment->update(['status' => $status]);
         return back()->with('success', 'Status appointment diubah ke ' . $status . '.');

@@ -6,6 +6,7 @@ use App\Models\DischargeSummary;
 use App\Models\Doctor;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
+use App\Services\DocumentNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -31,7 +32,7 @@ class DischargeSummaryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateRequest($request);
-        $validated['summary_no'] = $this->generateNo();
+        $validated['summary_no'] = app(DocumentNumberService::class)->next('discharge_summary', 'RP');
         $summary = DischargeSummary::create($validated);
         return redirect()->route('discharge-summaries.show', $summary)->with('success', 'Resume medis dibuat.');
     }
@@ -55,6 +56,7 @@ class DischargeSummaryController extends Controller
 
     public function update(Request $request, DischargeSummary $dischargeSummary): RedirectResponse
     {
+        abort_if($dischargeSummary->status === 'finalized', 422, 'Resume sudah finalized; buat amendment untuk koreksi.');
         $validated = $this->validateRequest($request);
         $dischargeSummary->update($validated);
         return redirect()->route('discharge-summaries.show', $dischargeSummary)->with('success', 'Resume diperbarui.');
@@ -91,12 +93,14 @@ class DischargeSummaryController extends Controller
             'discharge_medication' => 'nullable|string',
             'follow_up' => 'nullable|string',
             'discharge_condition' => 'required|in:recovered,improved,unchanged,worsened,died',
+            'encounter_id' => 'nullable|exists:encounters,id',
         ]);
     }
 
-    private function generateNo(): string
+    public function finalize(DischargeSummary $dischargeSummary): RedirectResponse
     {
-        $count = DischargeSummary::whereDate('created_at', today())->count() + 1;
-        return sprintf('RP/%s/%04d', now()->format('Ymd'), $count);
+        abort_if($dischargeSummary->status === 'finalized', 422, 'Resume sudah finalized.');
+        $dischargeSummary->update(['status' => 'finalized', 'finalized_by' => auth()->id(), 'finalized_at' => now()]);
+        return back()->with('success', 'Resume medis pulang telah ditandatangani.');
     }
 }

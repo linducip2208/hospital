@@ -19,6 +19,11 @@ use App\Models\Referral;
 use App\Models\Salary;
 use App\Models\Surgery;
 use App\Models\User;
+use App\Models\Encounter;
+use App\Models\Dispensing;
+use App\Models\Charge;
+use App\Models\Bill;
+use App\Models\Refund;
 use App\Observers\ActivityObserver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
@@ -45,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         Salary::class,
         Leave::class,
         User::class,
+        Encounter::class,
+        Dispensing::class,
+        Charge::class,
+        Bill::class,
+        Refund::class,
     ];
 
     public function register(): void

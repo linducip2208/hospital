@@ -6,6 +6,8 @@ use App\Models\Doctor;
 use App\Models\Drug;
 use App\Models\Patient;
 use App\Models\Prescription;
+use App\Services\DocumentNumberService;
+use App\Services\PharmacyDispensingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,7 @@ class PrescriptionController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->ensurePermission('prescriptions.create');
         $query = Prescription::with(['patient', 'doctor', 'items']);
         if ($status = $request->get('status')) {
             $query->where('status', $status);
@@ -25,6 +28,7 @@ class PrescriptionController extends Controller
 
     public function create(): View
     {
+        $this->ensurePermission('prescriptions.create');
         return view('prescriptions.create', [
             'patients' => Patient::where('is_active', true)->orderBy('name')->get(),
             'doctors' => Doctor::where('status', 'active')->orderBy('name')->get(),
@@ -34,10 +38,13 @@ class PrescriptionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensurePermission('prescriptions.create');
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'nullable|exists:doctors,id',
             'medical_record_id' => 'nullable|exists:medical_records,id',
+            'appointment_id' => 'nullable|exists:appointments,id',
+            'encounter_id' => 'nullable|exists:encounters,id',
             'prescribed_at' => 'required|date',
             'is_iter' => 'nullable|boolean',
             'iter_count' => 'nullable|integer|min:0|max:10',
@@ -59,7 +66,7 @@ class PrescriptionController extends Controller
         $prescription = DB::transaction(function () use ($validated) {
             $items = $validated['items'];
             unset($validated['items']);
-            $validated['rx_no'] = $this->generateNo();
+            $validated['rx_no'] = app(DocumentNumberService::class)->next('prescription', 'RX', 4);
             $validated['status'] = 'issued';
             $rx = Prescription::create($validated);
             foreach ($items as $item) {
@@ -73,12 +80,14 @@ class PrescriptionController extends Controller
 
     public function show(Prescription $prescription): View
     {
+        $this->ensurePermission('prescriptions.create');
         $prescription->load(['patient', 'doctor', 'items.drug']);
         return view('prescriptions.show', compact('prescription'));
     }
 
     public function edit(Prescription $prescription): View
     {
+        $this->ensurePermission('prescriptions.create');
         $prescription->load('items');
         return view('prescriptions.edit', [
             'prescription' => $prescription,
@@ -90,10 +99,13 @@ class PrescriptionController extends Controller
 
     public function update(Request $request, Prescription $prescription): RedirectResponse
     {
+        $this->ensurePermission('prescriptions.create');
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'nullable|exists:doctors,id',
             'medical_record_id' => 'nullable|exists:medical_records,id',
+            'appointment_id' => 'nullable|exists:appointments,id',
+            'encounter_id' => 'nullable|exists:encounters,id',
             'prescribed_at' => 'required|date',
             'is_iter' => 'nullable|boolean',
             'iter_count' => 'nullable|integer|min:0|max:10',
@@ -128,8 +140,16 @@ class PrescriptionController extends Controller
 
     public function destroy(Prescription $prescription): RedirectResponse
     {
+        $this->ensurePermission('prescriptions.create');
         $prescription->delete();
         return redirect()->route('prescriptions.index')->with('success', 'Resep dihapus.');
+    }
+
+    public function dispense(Prescription $prescription, PharmacyDispensingService $service): RedirectResponse
+    {
+        $service->dispense($prescription);
+
+        return redirect()->route('prescriptions.show', $prescription)->with('success', 'Obat berhasil diverifikasi dan diserahkan dengan metode FEFO.');
     }
 
     public function print(Prescription $prescription): View
@@ -144,9 +164,4 @@ class PrescriptionController extends Controller
         return view('prescriptions.print-labels', compact('prescription'));
     }
 
-    private function generateNo(): string
-    {
-        $count = Prescription::whereDate('created_at', today())->count() + 1;
-        return sprintf('R/%s/%04d', now()->format('Ymd'), $count);
-    }
 }

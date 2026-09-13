@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\CheckPoliAccess;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\AuthenticateApi;
+use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\RequirePair;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,8 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', RequirePair::class);
 
         $middleware->alias([
+            'api.auth' => AuthenticateApi::class,
             'role' => CheckRole::class,
             'poli.access' => CheckPoliAccess::class,
+            'permission' => CheckPermission::class,
         ]);
 
         $middleware->redirectGuestsTo(function ($request) {

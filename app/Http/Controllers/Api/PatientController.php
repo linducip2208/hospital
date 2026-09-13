@@ -11,6 +11,7 @@ class PatientController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('patients.view'), 403);
         $query = Patient::query();
 
         if ($search = $request->get('search')) {
@@ -21,13 +22,16 @@ class PatientController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        return response()->json(
-            $query->latest()->paginate($request->get('per_page', 15))
-        );
+        $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
+        $patients = $query->latest()->paginate($perPage);
+        $patients->through(fn (Patient $patient) => $this->patientPayload($patient));
+
+        return response()->json($patients);
     }
 
     public function store(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('patients.create'), 403);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -47,22 +51,25 @@ class PatientController extends Controller
 
         $patient = Patient::create($validated);
 
-        return response()->json($patient, 201);
+        return response()->json($this->patientPayload($patient), 201);
     }
 
     public function show(Patient $patient): JsonResponse
     {
+        abort_unless(request()->user()?->hasPermission('patients.view'), 403);
         $patient->load(['appointments.doctor', 'medicalRecords', 'payments']);
-        return response()->json($patient);
+
+        return response()->json($this->patientPayload($patient));
     }
 
     public function update(Request $request, Patient $patient): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('patients.update'), 403);
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'nik' => 'nullable|string|max:20|unique:patients,nik,' . $patient->id,
+            'nik' => 'nullable|string|max:20|unique:patients,nik,'.$patient->id,
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female',
             'address' => 'nullable|string',
@@ -77,12 +84,31 @@ class PatientController extends Controller
 
         $patient->update($validated);
 
-        return response()->json($patient);
+        return response()->json($this->patientPayload($patient));
     }
 
-    public function destroy(Patient $patient): JsonResponse
+    public function destroy(Request $request, Patient $patient): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('patients.update'), 403);
         $patient->delete();
+
         return response()->json(null, 204);
+    }
+
+    private function patientPayload(Patient $patient): array
+    {
+        $payload = $patient->toArray();
+        $clinicalRoles = ['admin', 'developer', 'doctor', 'nurse', 'midwife'];
+
+        if (! in_array(request()->user()?->role, $clinicalRoles, true)) {
+            foreach ([
+                'nik', 'bpjs_number', 'address', 'allergies', 'medical_history',
+                'emergency_contact_name', 'emergency_contact_phone', 'notes',
+            ] as $field) {
+                unset($payload[$field]);
+            }
+        }
+
+        return $payload;
     }
 }

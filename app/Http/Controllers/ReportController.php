@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\ReportService;
+use App\Services\ActivityLogger;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response as ResponseFactory;
@@ -34,12 +36,14 @@ class ReportController extends Controller
         return view('reports.index', $data);
     }
 
-    public function pdf(Request $request): View
+    public function pdf(Request $request): \Symfony\Component\HttpFoundation\Response
     {
         [$from, $to, $groupBy] = $this->range($request);
         $data = $this->service->financialReport($from, $to, $groupBy);
 
-        return view('reports.pdf', $data);
+        return Pdf::loadView('reports.pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->download('laporan-bisnis-'.$from->format('Ymd').'-'.$to->format('Ymd').'.pdf');
     }
 
     public function finance(Request $request): View
@@ -50,8 +54,26 @@ class ReportController extends Controller
         return view('reports.finance', $data);
     }
 
+    public function operational(Request $request): View
+    {
+        [$from, $to] = $this->range($request);
+
+        return view('reports.operational', $this->service->operationalReport($from, $to));
+    }
+
+    public function operationalPdf(Request $request): \Symfony\Component\HttpFoundation\Response
+    {
+        [$from, $to] = $this->range($request);
+        $data = $this->service->operationalReport($from, $to);
+
+        return Pdf::loadView('reports.operational-pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->download('laporan-operasional-'.$from->format('Ymd').'-'.$to->format('Ymd').'.pdf');
+    }
+
     public function exportCsv(Request $request): StreamedResponse
     {
+        ActivityLogger::log('report_exported', null, 'Export laporan pembayaran.');
         [$from, $to] = $this->range($request);
         $payments = $this->service->recentPayments($from, $to, 100000);
 

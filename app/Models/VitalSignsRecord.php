@@ -11,7 +11,7 @@ class VitalSignsRecord extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'nurse_id', 'recorded_at',
+        'patient_id', 'nurse_id', 'appointment_id', 'encounter_id', 'recorded_at',
         'temperature', 'blood_pressure_systolic', 'blood_pressure_diastolic',
         'heart_rate', 'respiratory_rate', 'oxygen_saturation',
         'blood_sugar', 'weight', 'height', 'pain_level', 'notes',
@@ -41,4 +41,11 @@ class VitalSignsRecord extends Model
     {
         return $this->belongsTo(User::class, 'nurse_id');
     }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
+    }
+
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
 }

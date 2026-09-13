@@ -35,7 +35,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Consumer ID</label>
-                            <input type="text" name="bpjs_consumer_id" class="form-control @error('bpjs_consumer_id') is-invalid @enderror" value="{{ old('bpjs_consumer_id', $settings['bpjs_consumer_id'] ?? '') }}">
+                            <input type="text" name="bpjs_consumer_id" class="form-control @error('bpjs_consumer_id') is-invalid @enderror" value="{{ old('bpjs_consumer_id') }}" placeholder="Kosongkan jika tidak diubah">
                             @error('bpjs_consumer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-4">
@@ -45,7 +45,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">User Key</label>
-                            <input type="text" name="bpjs_user_key" class="form-control @error('bpjs_user_key') is-invalid @enderror" value="{{ old('bpjs_user_key', $settings['bpjs_user_key'] ?? '') }}">
+                            <input type="text" name="bpjs_user_key" class="form-control @error('bpjs_user_key') is-invalid @enderror" value="{{ old('bpjs_user_key') }}" placeholder="Kosongkan jika tidak diubah">
                             @error('bpjs_user_key') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12">
@@ -70,10 +70,10 @@
             <div class="card-body text-center">
                 @if($settings['bpjs_is_enabled'] ?? false)
                     <i class="bi bi-check-circle text-success display-3"></i>
-                    <h5 class="mt-2 text-success">Terhubung</h5>
+                    <h5 class="mt-2 text-success">Live aktif</h5>
                 @else
                     <i class="bi bi-x-circle text-secondary display-3"></i>
-                    <h5 class="mt-2 text-muted">Belum terhubung</h5>
+                    <h5 class="mt-2 text-muted">Simulation / Not connected to BPJS</h5>
                 @endif
             </div>
         </div>

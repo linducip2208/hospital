@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Drug extends Model
@@ -30,6 +31,9 @@ class Drug extends Model
     {
         return $this->belongsTo(Vendor::class);
     }
+
+    public function batches(): HasMany { return $this->hasMany(DrugBatch::class); }
+    public function stockMovements(): HasMany { return $this->hasMany(StockMovement::class); }
 
     public function needsReorder(): bool
     {

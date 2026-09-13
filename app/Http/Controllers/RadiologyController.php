@@ -8,6 +8,7 @@ use App\Models\Radiology;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Services\RadiologyWorkflowService;
 
 class RadiologyController extends Controller
 {
@@ -82,5 +83,18 @@ class RadiologyController extends Controller
     {
         $radiology->load(['patient', 'doctor']);
         return view('radiologies.print', compact('radiology'));
+    }
+
+    public function start(Radiology $radiology, RadiologyWorkflowService $service): RedirectResponse
+    {
+        $service->start($radiology);
+        return back()->with('success', 'Pemeriksaan radiologi dimulai.');
+    }
+
+    public function verify(Request $request, Radiology $radiology, RadiologyWorkflowService $service): RedirectResponse
+    {
+        $data = $request->validate(['findings' => 'required|string', 'radiologist_id' => 'nullable|exists:doctors,id', 'pacs_reference_url' => 'nullable|url|max:2000', 'notes' => 'nullable|string']);
+        $service->verify($radiology, $data);
+        return back()->with('success', 'Hasil radiologi diverifikasi.');
     }
 }

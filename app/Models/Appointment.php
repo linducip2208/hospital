@@ -56,4 +56,12 @@ class Appointment extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function prescriptions(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Prescription::class); }
+    public function labTests(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(LabTest::class); }
+    public function radiologies(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Radiology::class); }
+    public function nursingCares(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(NursingCare::class); }
+    public function vitalSignsRecords(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(VitalSignsRecord::class); }
+    public function referrals(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(Referral::class); }
+    public function encounter(): \Illuminate\Database\Eloquent\Relations\HasOne { return $this->hasOne(Encounter::class); }
 }

@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\DocumentNumberService;
 
 class JournalEntry extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'journal_number', 'entry_date', 'description', 'reference',
+        'journal_number', 'entry_date', 'description', 'reference', 'source_type', 'source_id',
         'total_debit', 'total_credit', 'status', 'posted_by',
         'posted_at', 'notes',
     ];
@@ -32,10 +33,7 @@ class JournalEntry extends Model
     {
         static::creating(function (JournalEntry $je) {
             if (empty($je->journal_number)) {
-                $date = now()->format('Ymd');
-                $last = static::where('journal_number', 'like', "JRN-{$date}-%")->latest('id')->first();
-                $seq = $last ? (int) substr($last->journal_number, -4) + 1 : 1;
-                $je->journal_number = 'JRN-' . $date . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT);
+                $je->journal_number = app(DocumentNumberService::class)->next('journal', 'JRN', 4);
             }
         });
     }

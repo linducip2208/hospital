@@ -3,6 +3,10 @@
 namespace App\Services\Clinical;
 
 use App\Models\Patient;
+use App\Models\Setting;
+use App\Services\Insurance\BpjsVClaimGateway;
+use App\Services\Insurance\InsuranceGatewayInterface;
+use App\Services\Insurance\LocalInsuranceGateway;
 
 class InsuranceEligibilityService
 {
@@ -25,33 +29,10 @@ class InsuranceEligibilityService
             ];
         }
 
-        // Validasi format: BPJS = 13 digit
-        $digits = preg_replace('/\D/', '', $bpjs);
-        if (strlen($digits) !== 13) {
-            return [
-                'eligible' => false,
-                'payer' => 'bpjs',
-                'status' => 'Nomor tidak valid',
-                'message' => 'Nomor BPJS harus 13 digit. Silakan verifikasi ulang.',
-                'detail' => ['nomor' => $bpjs],
-            ];
-        }
-
-        // Demo: dianggap aktif jika NIK terverifikasi
-        $active = (bool) $patient->nik_verified;
-
-        return [
-            'eligible' => $active,
-            'payer' => 'bpjs',
-            'status' => $active ? 'Aktif' : 'Perlu verifikasi',
-            'message' => $active
-                ? 'Peserta BPJS aktif. Layanan dapat ditanggung sesuai hak kelas.'
-                : 'Status kepesertaan perlu diverifikasi ke BPJS (NIK belum terverifikasi).',
-            'detail' => [
-                'nomor_bpjs' => $digits,
-                'nama' => $patient->name,
-                'nik_terverifikasi' => $active,
-            ],
-        ];
+        $settings = Setting::where('group', 'bpjs')->pluck('value', 'key');
+        $configured = ($settings['bpjs_is_enabled'] ?? false) && ! empty($settings['bpjs_base_url']) && ! empty($settings['bpjs_consumer_id']) && ! empty($settings['bpjs_consumer_secret']) && ! empty($settings['bpjs_user_key']);
+        /** @var InsuranceGatewayInterface $gateway */
+        $gateway = $configured ? new BpjsVClaimGateway : new LocalInsuranceGateway;
+        return $gateway->checkEligibility($patient);
     }
 }

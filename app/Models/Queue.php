@@ -10,7 +10,7 @@ class Queue extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['polyclinic_id', 'patient_id', 'doctor_id', 'queue_number', 'status', 'called_at', 'completed_at', 'notes'];
+    protected $fillable = ['polyclinic_id', 'patient_id', 'doctor_id', 'appointment_id', 'encounter_id', 'queue_number', 'status', 'called_at', 'completed_at', 'notes'];
 
     protected function casts(): array
     {
@@ -20,4 +20,6 @@ class Queue extends Model
     public function polyclinic(): BelongsTo { return $this->belongsTo(Polyclinic::class); }
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function doctor(): BelongsTo { return $this->belongsTo(Doctor::class); }
+    public function appointment(): BelongsTo { return $this->belongsTo(Appointment::class); }
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
 }

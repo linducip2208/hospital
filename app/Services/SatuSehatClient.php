@@ -144,7 +144,6 @@ class SatuSehatClient
             if (! $response->successful()) {
                 Log::error('SatuSehat token request failed', [
                     'status' => $response->status(),
-                    'body' => $response->body(),
                 ]);
 
                 return null;
@@ -154,7 +153,7 @@ class SatuSehatClient
 
             $token = $data['access_token'] ?? null;
             if (! $token) {
-                Log::error('SatuSehat token response missing access_token', ['response' => $data]);
+                Log::error('SatuSehat token response missing access_token');
 
                 return null;
             }
@@ -268,9 +267,7 @@ class SatuSehatClient
             if (! $response->successful()) {
                 Log::error('SatuSehat API error', [
                     'method' => $method,
-                    'url' => $url,
                     'status' => $response->status(),
-                    'body' => $response->body(),
                 ]);
 
                 return null;

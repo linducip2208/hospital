@@ -7,6 +7,12 @@
         <a href="{{ route('prescriptions.print', $prescription) }}" target="_blank" class="btn btn-success"><i class="bi bi-printer"></i> Cetak Resep</a>
         <a href="{{ route('prescriptions.print-labels', $prescription) }}" target="_blank" class="btn btn-outline-success"><i class="bi bi-tag"></i> Cetak Etiket</a>
         <a href="{{ route('prescriptions.edit', $prescription) }}" class="btn btn-warning">Edit</a>
+        @if($prescription->status === 'issued')
+            <form action="{{ route('prescriptions.dispense', $prescription) }}" method="POST" class="d-inline" onsubmit="return confirm('Verifikasi stok dan serahkan obat dengan FEFO?')">
+                @csrf
+                <button class="btn btn-primary"><i class="bi bi-box-seam"></i> Dispensing</button>
+            </form>
+        @endif
         <a href="{{ route('prescriptions.index') }}" class="btn btn-secondary">Kembali</a>
     </div>
 </div>

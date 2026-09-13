@@ -16,6 +16,7 @@ class ChartOfAccountSeeder extends Seeder
             ['account_code' => '1-003', 'account_name' => 'Peralatan Medis', 'account_type' => 'asset', 'normal_balance' => 'debit'],
             ['account_code' => '1-004', 'account_name' => 'Bangunan', 'account_type' => 'asset', 'normal_balance' => 'debit'],
             ['account_code' => '1-005', 'account_name' => 'Kendaraan', 'account_type' => 'asset', 'normal_balance' => 'debit'],
+            ['account_code' => '1-006', 'account_name' => 'Persediaan Obat', 'account_type' => 'asset', 'normal_balance' => 'debit'],
 
             // Liabilities (2-xxx) — normal_balance: credit
             ['account_code' => '2-001', 'account_name' => 'Hutang Usaha', 'account_type' => 'liability', 'normal_balance' => 'credit'],

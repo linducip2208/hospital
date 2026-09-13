@@ -127,7 +127,10 @@ class SettingsController extends Controller
             'bpjs_user_key' => 'nullable|string',
             'bpjs_is_enabled' => 'nullable|boolean',
         ]);
+        $encryptedKeys = ['bpjs_consumer_id', 'bpjs_consumer_secret', 'bpjs_user_key'];
         foreach ($validated as $key => $value) {
+            if (in_array($key, $encryptedKeys, true) && ($value === null || $value === '')) continue;
+            if (in_array($key, $encryptedKeys, true)) $value = Crypt::encryptString($value);
             Setting::updateOrCreate(['key' => $key], [
                 'value' => $value, 'group' => 'bpjs',
                 'type' => $key === 'bpjs_is_enabled' ? 'boolean' : 'text',

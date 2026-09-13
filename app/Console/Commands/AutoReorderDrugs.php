@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Drug;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Services\DocumentNumberService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +45,7 @@ class AutoReorderDrugs extends Command
 
             DB::transaction(function () use ($vendorId, $drugs, $target, &$created) {
                 $po = PurchaseOrder::create([
-                    'po_number' => 'PO-AUTO-'.now()->format('Ymd').'-'.str_pad((string) (PurchaseOrder::whereDate('created_at', today())->count() + 1), 3, '0', STR_PAD_LEFT),
+                    'po_number' => app(DocumentNumberService::class)->next('purchase_order', 'PO', 4),
                     'vendor_id' => $vendorId ?: null,
                     'auto_generated' => true,
                     'supplier_name' => optional($drugs->first()->vendor)->name ?? 'Auto Reorder',
@@ -65,6 +66,7 @@ class AutoReorderDrugs extends Command
 
                     PurchaseOrderItem::create([
                         'purchase_order_id' => $po->id,
+                        'drug_id' => $drug->id,
                         'item_name' => $drug->name,
                         'quantity' => $qty,
                         'unit_price' => $price,

@@ -12,7 +12,7 @@ class NursingCare extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id', 'nurse_id', 'care_date',
+        'patient_id', 'nurse_id', 'appointment_id', 'encounter_id', 'care_date',
         'subjective', 'objective', 'assessment',
         'plan', 'implementation', 'evaluation',
         'status', 'notes',
@@ -34,4 +34,11 @@ class NursingCare extends Model
     {
         return $this->belongsTo(User::class, 'nurse_id');
     }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
+    }
+
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
@@ -12,7 +13,7 @@ class Payment extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id', 'appointment_id', 'medical_record_id', 'invoice_number',
+        'patient_id', 'appointment_id', 'medical_record_id', 'encounter_id', 'department_id', 'payer_type', 'service_class', 'invoice_number',
         'subtotal', 'discount', 'tax', 'amount',
         'paid_amount', 'change_amount', 'payment_method', 'status', 'notes',
     ];
@@ -43,4 +44,8 @@ class Payment extends Model
     {
         return $this->belongsTo(MedicalRecord::class);
     }
+
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
+    public function allocations(): HasMany { return $this->hasMany(PaymentAllocation::class); }
+    public function refunds(): HasMany { return $this->hasMany(Refund::class); }
 }

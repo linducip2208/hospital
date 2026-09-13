@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Doctor;
 use App\Models\Emergency;
 use App\Models\Patient;
+use App\Services\EncounterService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -36,11 +37,15 @@ class EmergencyController extends Controller
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'nullable|exists:doctors,id',
-            'triage' => 'required|string|max:255',
+            'triage' => 'required|in:red,yellow,green,black',
             'arrival_mode' => 'nullable|string|max:255',
             'complaint' => 'required|string',
             'notes' => 'nullable|string',
         ]);
+        $encounter = app(EncounterService::class)->forPatient(Patient::findOrFail($validated['patient_id']), $validated['doctor_id'] ?? null, auth()->id(), 'emergency');
+        $validated['encounter_id'] = $encounter->id;
+        $validated['arrived_at'] = now();
+        $validated['triaged_at'] = now();
         Emergency::create($validated);
         return redirect()->route('emergencies.index')->with('success', 'Pasien IGD berhasil dicatat.');
     }

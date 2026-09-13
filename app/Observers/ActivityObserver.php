@@ -22,7 +22,10 @@ class ActivityObserver
             return;
         }
 
-        ActivityLogger::log('updated', $model, null, ['changed' => $changed]);
+        $sensitive = ['password', 'remember_token', 'token', 'secret', 'api_key'];
+        $before = collect($model->getOriginal())->except($sensitive)->only($changed)->all();
+        $after = collect($model->getAttributes())->except($sensitive)->only($changed)->all();
+        ActivityLogger::log('updated', $model, null, ['changed' => $changed, 'before' => $before, 'after' => $after]);
     }
 
     public function deleted(Model $model): void

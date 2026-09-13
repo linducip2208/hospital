@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Payment;
+use App\Services\BillingService;
+use App\Services\DocumentNumberService;
+use App\Services\RefundService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->ensurePermission('billing.view');
         $query = Payment::with(['appointment.patient']);
         if ($status = $request->get('status')) {
             $query->where('status', $status);
@@ -26,6 +29,7 @@ class PaymentController extends Controller
 
     public function create(): View
     {
+        $this->ensurePermission('payments.receive');
         // Limit 500 terbaru untuk dropdown supaya page tidak hang
         $appointments = Appointment::with('patient')
             ->whereIn('status', ['completed', 'in_progress', 'confirmed'])
@@ -35,10 +39,12 @@ class PaymentController extends Controller
         return view('payments.create', compact('appointments'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, BillingService $billing): RedirectResponse
     {
+        $this->ensurePermission('payments.receive');
         $validated = $request->validate([
             'appointment_id' => 'required|exists:appointments,id',
+            'bill_id' => 'nullable|exists:bills,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
             'status' => 'required|in:pending,completed,cancelled,refunded',
@@ -47,8 +53,13 @@ class PaymentController extends Controller
 
         $appointment = Appointment::findOrFail($validated['appointment_id']);
 
+        if (! empty($validated['bill_id'])) {
+            $billing->receivePayment(\App\Models\Bill::findOrFail($validated['bill_id']), $validated);
+            return redirect()->route('payments.index')->with('success', 'Pembayaran dialokasikan ke tagihan.');
+        }
+
         $validated['patient_id'] = $appointment->patient_id;
-        $validated['invoice_number'] = $this->generateInvoiceNumber();
+        $validated['invoice_number'] = app(DocumentNumberService::class)->next('legacy_invoice', 'INV', 5);
         $validated['subtotal'] = $validated['amount'];
         $validated['discount'] = 0;
         $validated['tax'] = 0;
@@ -61,6 +72,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): View
     {
+        $this->ensurePermission('billing.view');
         $payment->load(['appointment.patient', 'appointment.doctor', 'appointment.treatment']);
         return view('payments.show', compact('payment'));
     }
@@ -112,15 +124,12 @@ class PaymentController extends Controller
         return view('payments.print-bill', compact('payment'));
     }
 
-    private function generateInvoiceNumber(): string
+    public function refund(Request $request, Payment $payment, RefundService $service): RedirectResponse
     {
-        $prefix = 'INV/' . now()->format('Y/m');
-        $last = Payment::where('invoice_number', 'like', $prefix . '/%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        $next = $last ? (int) Str::afterLast($last->invoice_number, '/') + 1 : 1;
-
-        return $prefix . '/' . str_pad($next, 5, '0', STR_PAD_LEFT);
+        $this->ensurePermission('payments.refund');
+        $data = $request->validate(['amount' => 'required|numeric|min:0.01', 'reason' => 'required|string|max:1000']);
+        $service->process($payment, (float) $data['amount'], $data['reason']);
+        return back()->with('success', 'Refund diproses dan jurnal pembalik dibuat.');
     }
+
 }

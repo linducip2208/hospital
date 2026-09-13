@@ -17,7 +17,7 @@ class DischargeSummary extends Model
         'admission_diagnosis', 'discharge_diagnosis',
         'chief_complaint', 'history', 'physical_exam', 'investigations',
         'treatment', 'progress', 'discharge_medication', 'follow_up',
-        'discharge_condition',
+        'discharge_condition', 'encounter_id', 'status', 'finalized_by', 'finalized_at',
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class DischargeSummary extends Model
         return [
             'admission_date' => 'datetime',
             'discharge_date' => 'datetime',
+            'finalized_at' => 'datetime',
         ];
     }
 
@@ -39,4 +40,6 @@ class DischargeSummary extends Model
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function doctor(): BelongsTo { return $this->belongsTo(Doctor::class); }
     public function medicalRecord(): BelongsTo { return $this->belongsTo(MedicalRecord::class); }
+    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
+    public function finalizedBy(): BelongsTo { return $this->belongsTo(User::class, 'finalized_by'); }
 }

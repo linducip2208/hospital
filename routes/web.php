@@ -5,8 +5,10 @@ use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\AmbulanceCallController;
 use App\Http\Controllers\AmbulanceController;
+use App\Http\Controllers\AdmissionController;
 use App\Http\Controllers\AncRecordController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\ClinicalOrderController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BabyImmunizationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BloodDonationController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\ClinicalPathwayController;
 use App\Http\Controllers\ClinicalToolController;
@@ -21,6 +24,7 @@ use App\Http\Controllers\CodeBlueActivationController;
 use App\Http\Controllers\CostEstimateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\DietOrderController;
 use App\Http\Controllers\DischargeSummaryController;
 use App\Http\Controllers\DoctorController;
@@ -46,10 +50,12 @@ use App\Http\Controllers\MedicalWasteController;
 use App\Http\Controllers\MedicationAdministrationController;
 use App\Http\Controllers\NurseAssignmentController;
 use App\Http\Controllers\NursingCareController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OdontogramController;
 use App\Http\Controllers\PageContentController;
 use App\Http\Controllers\PartographController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\PatientFeedbackController;
 use App\Http\Controllers\PatientSafetyIncidentController;
 use App\Http\Controllers\PatientScreeningController;
@@ -76,26 +82,12 @@ use App\Http\Controllers\TutorialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendorController;
 use App\Http\Controllers\VitalSignsController;
-use App\Models\Doctor;
-use App\Models\Patient;
-use App\Models\Polyclinic;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    $stats = Cache::remember('welcome.stats', now()->addHour(), function () {
-        return [
-            'patients' => Patient::count(),
-            'doctors' => Doctor::where('status', 'active')->count(),
-            'polys' => Polyclinic::where('is_active', true)->count(),
-        ];
-    });
-
-    return view('welcome', compact('stats'));
-});
+Route::get('/', [PublicHomeController::class, 'index'])->name('home');
 
 // Public documentation
-Route::get('/docs', fn () => view('docs'))->name('docs');
+Route::view('/docs', 'docs')->name('docs');
 
 // ============================================================
 // SEO: Sitemap & robots.txt (dinamis)
@@ -151,8 +143,12 @@ Route::post('register', [RegisterController::class, 'register']);
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
     // Patients
+    Route::get('patients/{patient}/clinical-timeline', [PatientController::class, 'clinicalTimeline'])->name('patients.timeline');
     Route::resource('patients', PatientController::class);
 
     // Doctors
@@ -165,11 +161,26 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/appointments/{appointment}/status/{status}', [AppointmentController::class, 'status'])->name('appointments.status');
     Route::resource('appointments', AppointmentController::class);
 
+    // Encounter sebagai pusat alur klinis
+    Route::post('encounters/{encounter}/start', [EncounterController::class, 'start'])->middleware('permission:encounters.manage')->name('encounters.start');
+    Route::post('encounters/{encounter}/complete', [EncounterController::class, 'complete'])->middleware('permission:encounters.manage')->name('encounters.complete');
+    Route::post('encounters/{encounter}/diagnoses', [EncounterController::class, 'addDiagnosis'])->middleware('permission:diagnoses.manage')->name('encounters.diagnoses.store');
+    Route::resource('encounters', EncounterController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('admissions', [AdmissionController::class, 'store'])->middleware('permission:encounters.manage')->name('admissions.store');
+    Route::post('admissions/{admission}/discharge', [AdmissionController::class, 'discharge'])->middleware('permission:encounters.manage')->name('admissions.discharge');
+    Route::post('discharge-summaries/{discharge_summary}/finalize', [DischargeSummaryController::class, 'finalize'])->middleware('permission:medical_records.sign')->name('discharge-summaries.finalize');
+    Route::post('clinical-orders/{clinicalOrder}/status', [ClinicalOrderController::class, 'status'])->middleware('permission:clinical_orders.manage')->name('clinical-orders.status');
+    Route::resource('clinical-orders', ClinicalOrderController::class)->only(['index', 'store', 'show']);
+
     // Medical Records
+    Route::post('medical-records/{medical_record}/finalize', [MedicalRecordController::class, 'finalize'])->name('medical-records.finalize');
     Route::resource('medical-records', MedicalRecordController::class);
 
     // Payments
     Route::resource('payments', PaymentController::class);
+    Route::get('/billing/{bill}', [BillingController::class, 'show'])->middleware('permission:billing.view')->name('billing.show');
+    Route::post('/billing/{bill}/pay', [BillingController::class, 'pay'])->middleware('permission:payments.receive')->name('billing.pay');
+    Route::post('/encounters/{encounter}/bill', [BillingController::class, 'generate'])->middleware('permission:billing.manage')->name('encounters.bill');
 
     // Pharmacy / Drugs
     Route::resource('drugs', DrugController::class);
@@ -184,6 +195,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
     Route::get('/reports/finance', [ReportController::class, 'finance'])->name('reports.finance');
+    Route::get('/reports/operational', [ReportController::class, 'operational'])->name('reports.operational');
+    Route::get('/reports/operational/pdf', [ReportController::class, 'operationalPdf'])->name('reports.operational.pdf');
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
 
     // Clinical tools (AJAX): ICD-10, drug interaction, eligibilitas BPJS
@@ -216,9 +229,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Laboratorium
     Route::resource('lab-tests', LabTestController::class);
+    Route::post('lab-tests/{lab_test}/collect', [LabTestController::class, 'collect'])->middleware('permission:lab.results.enter')->name('lab-tests.collect');
+    Route::post('lab-tests/{lab_test}/start', [LabTestController::class, 'start'])->middleware('permission:lab.results.enter')->name('lab-tests.start');
+    Route::post('lab-tests/{lab_test}/verify', [LabTestController::class, 'verify'])->middleware('permission:lab.results.verify')->name('lab-tests.verify');
 
     // Radiologi
     Route::resource('radiologies', RadiologyController::class);
+    Route::post('radiologies/{radiology}/start', [RadiologyController::class, 'start'])->middleware('permission:radiology.verify')->name('radiologies.start');
+    Route::post('radiologies/{radiology}/verify', [RadiologyController::class, 'verify'])->middleware('permission:radiology.verify')->name('radiologies.verify');
 
     // Ruang Bersalin / Maternity
     Route::resource('maternities', MaternityController::class);
@@ -303,6 +321,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Procurement / Purchase Order
     Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
 
     // Finance / Accounting
     Route::resource('chart-of-accounts', ChartOfAccountController::class);
@@ -324,6 +343,7 @@ Route::middleware(['auth'])->group(function () {
     // Resep Dokter
     Route::get('prescriptions/{prescription}/print', [PrescriptionController::class, 'print'])->name('prescriptions.print');
     Route::get('prescriptions/{prescription}/labels', [PrescriptionController::class, 'printLabels'])->name('prescriptions.print-labels');
+    Route::post('prescriptions/{prescription}/dispense', [PrescriptionController::class, 'dispense'])->middleware('permission:prescriptions.dispense')->name('prescriptions.dispense');
     Route::resource('prescriptions', PrescriptionController::class);
 
     // Surat Pesanan Obat
@@ -375,6 +395,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('surgeries/{surgery}/print', [SurgeryController::class, 'print'])->name('surgeries.print');
     Route::get('payments/{payment}/print/receipt', [PaymentController::class, 'printReceipt'])->name('payments.print-receipt');
     Route::get('payments/{payment}/print/bill', [PaymentController::class, 'printBill'])->name('payments.print-bill');
+    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->middleware('permission:payments.refund')->name('payments.refund');
     Route::get('medical-records/{medical_record}/print', [MedicalRecordController::class, 'print'])->name('medical-records.print');
     Route::get('ambulance-calls/{ambulance_call}/print', [AmbulanceCallController::class, 'print'])->name('ambulance-calls.print');
     Route::get('emergencies/{emergency}/print/triage', [EmergencyController::class, 'printTriage'])->name('emergencies.print-triage');

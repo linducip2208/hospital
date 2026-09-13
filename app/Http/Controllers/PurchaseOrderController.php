@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Services\PurchaseOrderReceivingService;
 
 class PurchaseOrderController extends Controller
 {
@@ -46,7 +47,7 @@ class PurchaseOrderController extends Controller
             'subtotal' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'total_amount' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|max:255',
+            'status' => 'nullable|in:draft,submitted,approved,ordered,partially_received,received,closed,cancelled',
             'notes' => 'nullable|string',
             'items' => 'nullable|array',
             'items.*.item_name' => 'required_with:items|string|max:255',
@@ -96,7 +97,7 @@ class PurchaseOrderController extends Controller
             'subtotal' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'total_amount' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|max:255',
+            'status' => 'nullable|in:draft,submitted,approved,ordered,partially_received,received,closed,cancelled',
             'notes' => 'nullable|string',
             'items' => 'nullable|array',
             'items.*.item_name' => 'required_with:items|string|max:255',
@@ -127,5 +128,11 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->items()->delete();
         $purchaseOrder->delete();
         return redirect()->route('purchase-orders.index')->with('success', 'Purchase Order berhasil dihapus.');
+    }
+
+    public function receive(PurchaseOrder $purchaseOrder, PurchaseOrderReceivingService $service): RedirectResponse
+    {
+        $service->receive($purchaseOrder);
+        return back()->with('success', 'PO diterima; batch dan stock movement berhasil dibuat.');
     }
 }

@@ -19,6 +19,32 @@ php artisan serve
 
 Buka `http://localhost:8000` — landing page siap. Login ke `/login`.
 
+## Production ERP Upgrade
+
+Core workflow sekarang memakai `Encounter` sebagai clinical hub: appointment/antrian, rekam medis, diagnosis ICD-10, clinical order, lab/radiologi, resep, FEFO dispensing, charge/bill/invoice, payment allocation, refund, journal, admission, bed movement, discharge, audit trail, RBAC, dan queue SatuSehat dapat ditelusuri dalam satu perjalanan pasien.
+
+Dokumentasi operasional:
+
+- [Arsitektur](docs/ARCHITECTURE.md) · [Patient Journey](docs/PATIENT-JOURNEY.md)
+- [Billing](docs/BILLING-FLOW.md) · [Farmasi](docs/PHARMACY-FLOW.md) · [Rawat Inap](docs/INPATIENT-FLOW.md)
+- [BPJS](docs/BPJS-INTEGRATION.md) · [SatuSehat](docs/SATUSEHAT-INTEGRATION.md) · [Permissions](docs/PERMISSIONS.md)
+- [API v1](docs/API.md) · [Security](docs/SECURITY.md) · [Deployment](docs/DEPLOYMENT.md)
+- [Full upgrade report](docs/UPGRADE-REPORT.md)
+
+### Verifikasi instalasi dan release
+
+```bash
+composer validate --no-check-publish
+php artisan optimize:clear
+php artisan migrate:fresh --seed
+php artisan test
+npm ci && npm run build
+```
+
+Untuk API eksternal gunakan bearer token dari `POST /api/auth/tokens`; jangan memakai session browser untuk integrasi pihak ketiga. Jalankan queue worker dan scheduler sesuai [DEPLOYMENT.md](docs/DEPLOYMENT.md). Submit `/sitemap.xml` ke Google Search Console setelah `APP_URL` produksi diisi.
+
+BPJS dan SatuSehat tidak dianggap live hanya karena konfigurasi tersimpan: tanpa credential dan UAT fasilitas kesehatan, UI tetap menampilkan mode simulation/offline.
+
 ---
 
 ## 🔑 Default Login
@@ -44,13 +70,13 @@ Buka `http://localhost:8000` — landing page siap. Login ke `/login`.
 
 | Metric | Value |
 |--------|-------|
-| **Tabel Database** | 52 |
-| **Route** | 339 |
-| **Kontroller** | 40+ |
-| **Model** | 35+ |
-| **View** | 120+ |
-| **Migration** | 55 |
-| **Seeder** | 14 |
+| **Tabel Database** | 90+ |
+| **Route** | 601 |
+| **Kontroller** | 90+ |
+| **Model** | 70+ |
+| **View** | 340+ |
+| **Migration** | 90+ |
+| **Seeder** | 16+ |
 | **Role User** | 12 |
 
 ---

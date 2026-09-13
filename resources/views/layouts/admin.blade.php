@@ -1430,7 +1430,7 @@
 
         <div class="sidebar-user">
             <div class="dropdown">
-                <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                <a href="{{ route('dashboard') }}" class="dropdown-toggle" data-bs-toggle="dropdown">
                     <span class="avatar">{{ strtoupper(substr(Auth::user()?->name ?? 'U', 0, 2)) }}</span>
                     <div class="user-info">
                         <div class="user-name">{{ Auth::user()?->name ?? 'User' }}</div>
@@ -1546,7 +1546,7 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text small" style="color:var(--text-muted);">{{ Auth::user()?->email ?? '' }}</span></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Profil Saya</a></li>
+                    <li><a class="dropdown-item" href="{{ route('settings.index') }}"><i class="bi bi-person me-2"></i> Profil & Pengaturan</a></li>
                     <li><a class="dropdown-item" href="{{ route('settings.index') }}"><i class="bi bi-gear me-2"></i> Pengaturan</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
