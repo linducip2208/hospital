@@ -365,12 +365,9 @@ step_cron_and_queue() {
     CRON_JOB="* * * * * cd ${PROJECT_DIR} && php artisan schedule:run >> /dev/null 2>&1"
     (crontab -l 2>/dev/null | grep -v "schedule:run" || true; echo "$CRON_JOB") | crontab -
 
-    # DB backup cron (2 AM daily)
-    BACKUP_DIR="/backup"
-    mkdir -p "$BACKUP_DIR"
-    BACKUP_CRON="0 2 * * * mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} | gzip > ${BACKUP_DIR}/db-\$(date +\%Y\%m\%d).sql.gz"
-    CLEANUP_CRON="0 3 * * * find ${BACKUP_DIR} -name 'db-*.sql.gz' -mtime +30 -delete"
-    (crontab -l 2>/dev/null | grep -v "mysqldump.*${DB_NAME}" | grep -v "find.*db-"; echo "$BACKUP_CRON"; echo "$CLEANUP_CRON") | crontab -
+    # Backup dipanggil melalui Laravel agar credential tidak tersimpan di crontab.
+    BACKUP_CRON="0 2 * * * cd ${PROJECT_DIR} && php artisan db:backup --keep=30 >> /var/log/hospital-backup.log 2>&1"
+    (crontab -l 2>/dev/null | grep -v "artisan db:backup" || true; echo "$BACKUP_CRON") | crontab -
 
     log "Cron jobs configured"
 }

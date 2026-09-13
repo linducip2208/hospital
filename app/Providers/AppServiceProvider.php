@@ -28,6 +28,9 @@ use App\Observers\ActivityObserver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -64,6 +67,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute((int) env('API_RATE_LIMIT', 60))
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute((int) env('LOGIN_RATE_LIMIT', 5))
+                ->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
         Builder::macro('whereAny', function (array $columns, string $operator, mixed $value) {
             return $this->where(function (Builder $query) use ($columns, $operator, $value) {
                 foreach ($columns as $column) {

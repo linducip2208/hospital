@@ -45,7 +45,7 @@ class RequirePair
         }
 
         // Health check / debug
-        if ($path === '/up') {
+        if (in_array($path, ['/up', '/health/live', '/health/ready'], true)) {
             return true;
         }
 

@@ -8,6 +8,8 @@
 | `deploy.sh` | Auto-deploy script untuk Ubuntu 22.04/24.04 |
 | `*` (semua source code) | Laravel 13 project files (tanpa vendor, node_modules, .git) |
 
+Schema production memakai migration versioned dan data awal memakai seeder; jangan mengandalkan dump SQL lama yang mungkin tidak tersedia pada checkout ini.
+
 ## Cara Deploy ke VPS
 
 ### Opsi 1: Auto Deploy (rekomendasi)
@@ -31,24 +33,23 @@ cp -r . /var/www/hospital
 cd /var/www/hospital
 
 # 2. Setup .env (isi konfigurasi production)
-cp .env.production.example .env
+cp .env.example .env
 nano .env
 
 # 3. Install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
 
-# 4. Import database
-mysql -u root -p hospital_prod < hospital-db-dump.sql
-
-# 5. Laravel setup
+# 4. Laravel setup
 php artisan key:generate
 php artisan storage:link
+php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan production:check --strict
 
-# 6. Permissions
+# 5. Permissions
 chown -R www-data:www-data .
 chmod -R 775 storage bootstrap/cache
 ```
@@ -65,7 +66,7 @@ chmod -R 775 storage bootstrap/cache
 
 ## Default Admin Login
 
-Setelah import SQL dump, login dengan:
+Setelah seeder dijalankan, gunakan akun demo yang tercantum di README utama hanya untuk staging. Untuk production, buat akun operator baru dan nonaktifkan akun demo.
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -93,6 +94,9 @@ Setelah import SQL dump, login dengan:
 - [ ] Cek dashboard statistik muncul
 - [ ] Ganti password semua user
 - [ ] Setup backup cron (ada di deploy.sh)
+- [ ] Jalankan `php artisan db:backup --keep=30` dan lakukan restore drill ke database terpisah
+- [ ] Verifikasi `/health/live` dan `/health/ready` dari monitoring eksternal
+- [ ] Aktifkan queue worker dan scheduler dari `deploy/supervisor.conf`
 
 ## Troubleshooting
 

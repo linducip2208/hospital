@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\AuthenticateApi;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\RequirePair;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup('web', SecurityHeaders::class);
         $middleware->appendToGroup('web', RequirePair::class);
 
         $middleware->alias([

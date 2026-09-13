@@ -36,6 +36,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EquipmentCalibrationController;
 use App\Http\Controllers\EquipmentMaintenanceController;
 use App\Http\Controllers\HospitalBedController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\IcuMonitoringController;
 use App\Http\Controllers\InfectionSurveillanceController;
 use App\Http\Controllers\InformedConsentController;
@@ -85,6 +86,8 @@ use App\Http\Controllers\VitalSignsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicHomeController::class, 'index'])->name('home');
+Route::get('/health/live', [HealthController::class, 'live'])->name('health.live');
+Route::get('/health/ready', [HealthController::class, 'ready'])->name('health.ready');
 
 // Public documentation
 Route::view('/docs', 'docs')->name('docs');
@@ -134,7 +137,7 @@ require base_path('routes/portal.php');
 
 // Authentication
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('login', [LoginController::class, 'login']);
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [RegisterController::class, 'register']);

@@ -13,8 +13,8 @@ class AuthenticateApi
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Browser-based internal integrations may continue using the staff session.
-        if (Auth::guard('web')->check()) {
+        // Backward-compatible browser access is opt-in and disabled in production by default.
+        if (config('api.allow_session', false) && Auth::guard('web')->check()) {
             return $next($request);
         }
 

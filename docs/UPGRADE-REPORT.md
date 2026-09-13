@@ -96,10 +96,14 @@ Existing client is used through queued resource synchronization. Patient, Practi
 - `composer validate --no-check-publish`: passed; dependency constraint warning was removed for DomPDF.
 - `php artisan route:list --except-vendor`: route compilation and `route:cache` passed (601 routes at audit time).
 - `php artisan migrate:fresh --seed`: verified on MySQL after fixing demo treatment slug fallback.
-- `php artisan test`: 145 passed, 354 assertions after the final Laravel 13.31 dependency refresh.
+- `php artisan test`: 148 passed, 367 assertions after production-hardening tests were added.
 - API tests: 43 passed, including bearer token authentication.
 - `npm run build`: passed after adding the required esbuild dev dependency.
 - `npm audit`: 0 vulnerabilities after `npm audit fix`.
+- `composer audit --locked --no-interaction`: no security vulnerability advisories found.
+- `php artisan production:check`: command tersedia untuk memblokir konfigurasi production yang belum aman.
+- `/health/live` dan `/health/ready`: endpoint liveness/readiness dengan test database, cache, dan security headers.
+- `.github/workflows/ci.yml`: CI memvalidasi Composer, test suite, `npm ci`, dan production build pada push/PR `main`.
 - `node scripts/screenshot-mobile.cjs`: captured dashboard, patient list, and patient registration at 414×896 using the seeded demo account.
 
 ## 12. Known limitations
