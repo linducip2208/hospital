@@ -36,7 +36,7 @@ class PageContentController extends Controller
             'subtitle'    => 'nullable|string|max:255',
             'content'     => 'nullable|string',
             'image_url'   => 'nullable|string|max:500',
-            'image_file'  => 'nullable|image|mimes:jpg,jpeg,png,webp,svg,gif|max:2048',
+            'image_file'  => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:2048',
             'button_text' => 'nullable|string|max:100',
             'button_url'  => 'nullable|string|max:500',
             'video_url'   => 'nullable|string|max:500',
@@ -55,7 +55,10 @@ class PageContentController extends Controller
             }
 
             $file = $request->file('image_file');
-            $filename = $pageContent->section . '-' . time() . '.' . $file->getClientOriginalExtension();
+            // Ekstensi ditebak dari isi file (bukan dari nama upload) + nama acak
+            // agar file SVG/HTML ber-JS tidak bisa lolos sebagai gambar.
+            $ext = $file->guessExtension() ?: 'bin';
+            $filename = $pageContent->section . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
             $path = $file->storeAs('cms', $filename, 'public');
             $validated['image_url'] = Storage::url($path); // jadi /storage/cms/xxx.png
         } elseif ($request->boolean('remove_image')) {

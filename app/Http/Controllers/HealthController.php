@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class HealthController extends Controller
 {
@@ -20,6 +21,7 @@ class HealthController extends Controller
     {
         $checks = [
             'database' => false,
+            'schema' => false,
             'storage' => $this->canWriteStorage(),
             'cache' => false,
         ];
@@ -27,6 +29,10 @@ class HealthController extends Controller
         try {
             DB::connection()->getPdo()->query('select 1');
             $checks['database'] = true;
+            // Schema check: tabel kritis harus ada, kalau tidak berarti migrasi
+            // di database tersebut (mis. sql_hospital) belum dijalankan.
+            // Sengaja generik — tidak membocorkan nama DB/tabel yang hilang.
+            $checks['schema'] = $this->schemaIsComplete();
         } catch (\Throwable) {
             // Keep the response intentionally generic; connection details are sensitive.
         }
@@ -47,8 +53,32 @@ class HealthController extends Controller
         ], $ready ? 200 : 503);
     }
 
-    private function canWriteStorage(): bool
+    /**
+     * Tabel kritis harus ada — kalau tidak, migrasi di database aktif
+     * belum dijalankan (kasus: sql_hospital belum di-migrate).
+     * Return bool saja, tanpa membocorkan tabel mana yang hilang.
+     */
+    private function schemaIsComplete(): bool
     {
+        $required = [
+            'users', 'patients', 'doctors', 'polyclinics',
+            'doctor_polyclinic', 'queues', 'appointments', 'settings',
+        ];
+
+        try {
+            foreach ($required as $table) {
+                if (! Schema::hasTable($table)) {
+                    return false;
+                }
+            }
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function canWriteStorage(): bool    {
         $path = storage_path('framework/health-check-'.bin2hex(random_bytes(8)).'.tmp');
 
         try {

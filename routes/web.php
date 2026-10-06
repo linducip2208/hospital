@@ -191,8 +191,9 @@ Route::middleware(['auth'])->group(function () {
     // Rooms / Inpatient
     Route::resource('rooms', RoomController::class);
 
-    // User Management
-    Route::resource('users', UserController::class);
+    // User Management — hanya pemilik permission users.manage
+    // (admin/developer bypass otomatis via hasPermission).
+    Route::resource('users', UserController::class)->middleware('permission:users.manage');
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -218,17 +219,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/queues/{queue}/complete', [QueueController::class, 'complete'])->name('queues.complete');
     Route::resource('queues', QueueController::class);
 
-    // Settings
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
-    Route::get('/settings/satusehat', [SettingsController::class, 'satusehat'])->name('settings.satusehat');
-    Route::match(['put', 'post'], '/settings/satusehat', [SettingsController::class, 'satusehatUpdate'])->name('settings.satusehat.update');
-    Route::post('/settings/satusehat/test', [SettingsController::class, 'satusehatTest'])->name('settings.satusehat.test');
-    Route::post('/settings/satusehat/webhook-test', [SettingsController::class, 'satusehatWebhookTest'])->name('settings.satusehat.webhook.test');
-    Route::get('/settings/bpjs', [SettingsController::class, 'bpjs'])->name('settings.bpjs');
-    Route::match(['put', 'post'], '/settings/bpjs', [SettingsController::class, 'bpjsUpdate'])->name('settings.bpjs.update');
-    Route::get('/settings/branding', [SettingsController::class, 'branding'])->name('settings.branding');
-    Route::post('/settings/branding', [SettingsController::class, 'brandingUpdate'])->name('settings.branding.update');
+    // Settings — hanya pemilik permission settings.manage (admin/developer).
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::get('/settings/satusehat', [SettingsController::class, 'satusehat'])->name('settings.satusehat');
+        Route::match(['put', 'post'], '/settings/satusehat', [SettingsController::class, 'satusehatUpdate'])->name('settings.satusehat.update');
+        Route::post('/settings/satusehat/test', [SettingsController::class, 'satusehatTest'])->name('settings.satusehat.test');
+        Route::post('/settings/satusehat/webhook-test', [SettingsController::class, 'satusehatWebhookTest'])->name('settings.satusehat.webhook.test');
+        Route::get('/settings/bpjs', [SettingsController::class, 'bpjs'])->name('settings.bpjs');
+        Route::match(['put', 'post'], '/settings/bpjs', [SettingsController::class, 'bpjsUpdate'])->name('settings.bpjs.update');
+        Route::get('/settings/branding', [SettingsController::class, 'branding'])->name('settings.branding');
+        Route::post('/settings/branding', [SettingsController::class, 'brandingUpdate'])->name('settings.branding.update');
+    });
 
     // Laboratorium
     Route::resource('lab-tests', LabTestController::class);

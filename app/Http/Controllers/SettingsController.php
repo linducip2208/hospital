@@ -19,7 +19,20 @@ class SettingsController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        foreach ($request->input('settings', []) as $key => $value) {
+        // Hanya key umum yang boleh diubah massal; key sensitif (satu_sehat,
+        // bpjs, kredensial) wajib lewat form khusus yang mengenkripsi nilainya.
+        $validated = $request->validate([
+            'settings' => 'nullable|array|max:50',
+            'settings.*' => 'nullable|string|max:2000',
+        ]);
+
+        foreach ($validated['settings'] ?? [] as $key => $value) {
+            if (! preg_match('/^[a-z][a-z0-9_]{1,49}$/', (string) $key)) {
+                continue;
+            }
+            if (str_starts_with((string) $key, 'satusehat_') || str_starts_with((string) $key, 'bpjs_')) {
+                continue;
+            }
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
         return back()->with('success', 'Pengaturan berhasil disimpan.');
@@ -155,8 +168,8 @@ class SettingsController extends Controller
             'branding_footer_text' => 'nullable|string|max:255',
             'branding_hero_title' => 'nullable|string|max:255',
             'branding_hero_subtitle' => 'nullable|string|max:500',
-            'branding_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'branding_favicon_file' => 'nullable|file|mimes:ico,png,svg|max:1024',
+            'branding_logo_file' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
+            'branding_favicon_file' => 'nullable|file|mimes:ico,png|max:1024',
         ]);
 
         if ($request->hasFile('branding_logo_file')) {

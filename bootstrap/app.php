@@ -37,5 +37,36 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Jangan pernah membocorkan detail SQL/koneksi ke response HTTP.
+        // Full trace tetap masuk ke log server untuk developer.
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
+            $sqlState = $e->getPrevious()?->getCode();
+            $isSchemaGap = in_array($sqlState, ['42S02', '42S22'], true)
+                || str_contains($e->getMessage(), "doesn't exist")
+                || str_contains($e->getMessage(), 'Unknown column');
+
+            \Illuminate\Support\Facades\Log::error('Database query failed', [
+                'sql_state' => $sqlState,
+                'schema_gap' => $isSchemaGap,
+                'route' => $request->path(),
+            ]);
+
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => $isSchemaGap
+                        ? 'Skema database belum lengkap. Jalankan migrasi: php artisan migrate --force.'
+                        : 'Layanan backend sedang gangguan. Coba lagi nanti.',
+                ], 500);
+            }
+
+            // Production: halaman 500 generik (tanpa trace SQL).
+            // Local/debug: biarkan handler bawaan tampil agar developer bisa debug.
+            if (! config('app.debug')) {
+                abort(500, $isSchemaGap
+                    ? 'Skema database belum lengkap. Hubungi administrator untuk menjalankan migrasi.'
+                    : 'Terjadi kesalahan sistem. Coba lagi nanti.');
+            }
+
+            return null;
+        });
     })->create();
