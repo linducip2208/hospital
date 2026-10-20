@@ -63,10 +63,9 @@ use App\Models\Vendor;
 use App\Models\VitalSignsRecord;
 
 /*
- * Modul staf generik untuk API Flutter (auth: token staf).
- * Modul dengan controller khusus (patients, doctors, treatments,
- * appointments, medical-records, payments) TIDAK ada di sini.
- * 'search' dan 'with' opsional; sisanya otomatis dari skema DB.
+ * Modul dengan 'read_roles'/'write_roles' dibatasi per peran (selain itu:
+ * semua staf boleh baca, semua staf boleh tulis). admin & developer
+ * selalu lolos. Token pasien selalu ditolak (403).
  */
 return [
     'queues' => ['model' => Queue::class],
@@ -114,19 +113,19 @@ return [
     'patient-feedbacks' => ['model' => PatientFeedback::class],
     'patient-safety-incidents' => ['model' => PatientSafetyIncident::class],
     'blood-donations' => ['model' => BloodDonation::class],
-    'cost-estimates' => ['model' => CostEstimate::class],
-    'bills' => ['model' => Bill::class],
-    'invoices' => ['model' => Invoice::class],
-    'journal-entries' => ['model' => JournalEntry::class],
-    'chart-of-accounts' => ['model' => ChartOfAccount::class],
+    'cost-estimates' => ['model' => CostEstimate::class, 'write_roles' => ['admin', 'developer', 'finance', 'cashier']],
+    'bills' => ['model' => Bill::class, 'write_roles' => ['admin', 'developer', 'finance', 'cashier']],
+    'invoices' => ['model' => Invoice::class, 'write_roles' => ['admin', 'developer', 'finance', 'cashier']],
+    'journal-entries' => ['model' => JournalEntry::class, 'read_roles' => ['admin', 'developer', 'finance', 'director'], 'write_roles' => ['admin', 'developer', 'finance']],
+    'chart-of-accounts' => ['model' => ChartOfAccount::class, 'read_roles' => ['admin', 'developer', 'finance', 'director'], 'write_roles' => ['admin', 'developer', 'finance']],
     'departments' => ['model' => Department::class],
     'polyclinics' => ['model' => Polyclinic::class],
-    'employees' => ['model' => Employee::class],
+    'employees' => ['model' => Employee::class, 'read_roles' => ['admin', 'developer', 'HR', 'finance', 'director'], 'write_roles' => ['admin', 'developer', 'HR']],
     'attendances' => ['model' => Attendance::class],
     'leaves' => ['model' => Leave::class],
     'staff-schedules' => ['model' => StaffSchedule::class],
     'shift-handovers' => ['model' => ShiftHandover::class],
-    'salaries' => ['model' => Salary::class],
+    'salaries' => ['model' => Salary::class, 'read_roles' => ['admin', 'developer', 'finance', 'HR', 'director'], 'write_roles' => ['admin', 'developer', 'finance', 'HR']],
     'nurse-assignments' => ['model' => NurseAssignment::class],
     'infection-surveillances' => ['model' => InfectionSurveillance::class],
 ];

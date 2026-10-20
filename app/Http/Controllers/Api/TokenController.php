@@ -8,6 +8,7 @@ use App\Models\PatientApiToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -70,6 +71,16 @@ class TokenController
     {
         abort_unless($token->user_id === $request->user()->id, 403);
         $token->delete();
+
+        return response()->json(null, 204);
+    }
+
+    public function destroyPatientCurrent(Request $request): JsonResponse
+    {
+        $patient = Auth::guard('patient')->user();
+        abort_unless($patient, 403);
+        $hash = hash('sha256', (string) $request->bearerToken());
+        PatientApiToken::where('token_hash', $hash)->where('patient_id', $patient->id)->delete();
 
         return response()->json(null, 204);
     }

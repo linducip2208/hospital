@@ -40,6 +40,8 @@ Route::prefix('v1')->middleware(['api.auth', 'throttle:api'])->name('api.')->gro
 
     Route::delete('auth/tokens/{token}', [TokenController::class, 'destroy'])
         ->name('tokens.destroy');
+    Route::delete('auth/patients/tokens/current', [TokenController::class, 'destroyPatientCurrent'])
+        ->name('patients.tokens.destroy-current');
 
     // Layanan mandiri pasien (guard patient, hanya data milik sendiri)
     Route::prefix('me')->name('me.')->group(function () {

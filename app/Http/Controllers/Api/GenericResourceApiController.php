@@ -34,8 +34,8 @@ class GenericResourceApiController extends Controller
 
     public function index(Request $request, string $resource): JsonResponse
     {
-        abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
+        $this->authorizeResource($request, $config, 'read');
         $model = $this->model($config);
         $query = $model->newQuery();
 
@@ -59,14 +59,16 @@ class GenericResourceApiController extends Controller
 
         $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
         $orderCol = Schema::hasColumn($model->getTable(), 'created_at') ? 'created_at' : $model->getKeyName();
+        $page = $query->orderByDesc($orderCol)->paginate($perPage);
+        $page->getCollection()->transform(fn ($item) => $this->scrub($item->toArray()));
 
-        return response()->json($query->orderByDesc($orderCol)->paginate($perPage));
+        return response()->json($page);
     }
 
     public function store(Request $request, string $resource): JsonResponse
     {
-        abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
+        $this->authorizeResource($request, $config, 'write');
         $model = $this->model($config);
 
         try {
@@ -74,26 +76,27 @@ class GenericResourceApiController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             return response()->json(['message' => 'Data tidak dapat disimpan. Periksa field wajib tabel ini.', 'error' => $e->getMessage()], 422);
         }
+        \App\Services\ActivityLogger::log('created', $record, null, ['via' => 'api', 'resource' => $resource]);
 
-        return response()->json($record->fresh(), 201);
+        return response()->json($this->scrub($record->fresh()->toArray()), 201);
     }
 
     public function show(Request $request, string $resource, string $id): JsonResponse
     {
-        abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
+        $this->authorizeResource($request, $config, 'read');
         $query = $this->model($config)->newQuery();
         if (! empty($config['with'])) {
             $query->with($config['with']);
         }
 
-        return response()->json($query->findOrFail((int) $id));
+        return response()->json($this->scrub($query->findOrFail((int) $id)->toArray()));
     }
 
     public function update(Request $request, string $resource, string $id): JsonResponse
     {
-        abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
+        $this->authorizeResource($request, $config, 'write');
         $model = $this->model($config);
         $record = $model->newQuery()->findOrFail((int) $id);
         try {
@@ -101,17 +104,46 @@ class GenericResourceApiController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             return response()->json(['message' => 'Data tidak dapat diubah. Periksa field tabel ini.', 'error' => $e->getMessage()], 422);
         }
+        \App\Services\ActivityLogger::log('updated', $record, null, ['via' => 'api', 'resource' => $resource]);
 
-        return response()->json($record->fresh());
+        return response()->json($this->scrub($record->fresh()->toArray()));
     }
 
     public function destroy(Request $request, string $resource, string $id): JsonResponse
     {
-        abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
-        $this->model($config)->newQuery()->findOrFail((int) $id)->delete();
+        $this->authorizeResource($request, $config, 'write');
+        $record = $this->model($config)->newQuery()->findOrFail((int) $id);
+        $record->delete();
+        \App\Services\ActivityLogger::log('deleted', $record, null, ['via' => 'api', 'resource' => $resource]);
 
         return response()->json(null, 204);
+    }
+
+    private function authorizeResource(Request $request, array $config, string $action): void
+    {
+        $user = $request->user();
+        abort_unless($user, 403, 'Hanya token staf.');
+        // admin & developer selalu lolos (konsisten dengan User::hasPermission).
+        if (in_array($user->role, ['admin', 'developer'], true)) {
+            return;
+        }
+        $allowed = $config[$action === 'read' ? 'read_roles' : 'write_roles'] ?? null;
+        if (is_array($allowed)) {
+            abort_unless(in_array($user->role, $allowed, true), 403, 'Peran Anda tidak boleh mengakses modul ini via API.');
+        }
+    }
+
+    /** Buang field sensitif dari payload generik (defense in depth). */
+    private function scrub(array $payload): array
+    {
+        foreach ($payload as $key => $value) {
+            if (is_string($key) && preg_match('/password|token|secret|api_key|remember/i', $key)) {
+                unset($payload[$key]);
+            }
+        }
+
+        return $payload;
     }
 
     /** @return array<string, string|array> */
