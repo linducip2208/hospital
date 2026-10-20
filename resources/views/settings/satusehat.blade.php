@@ -30,8 +30,9 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">Base URL</label>
-                            <input type="text" name="satusehat_base_url" class="form-control @error('satusehat_base_url') is-invalid @enderror" value="{{ old('satusehat_base_url', $settings['satusehat_base_url'] ?? '') }}" placeholder="https://api.satusehat.kemkes.go.id">
+                            <input type="text" name="satusehat_base_url" class="form-control @error('satusehat_base_url') is-invalid @enderror" value="{{ old('satusehat_base_url', $settings['satusehat_base_url'] ?? '') }}" placeholder="https://api-satusehat-dev.dto.kemkes.go.id">
                             @error('satusehat_base_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">DEV/sandbox: <code>https://api-satusehat-dev.dto.kemkes.go.id</code> · PROD: <code>https://api-satusehat.kemkes.go.id</code>. Kredensial developer hanya berlaku untuk DEV.</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Client ID</label>

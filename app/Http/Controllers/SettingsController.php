@@ -83,7 +83,7 @@ class SettingsController extends Controller
 
             $encrypted = $value;
             if (in_array($key, $encryptedKeys) && $value !== null && $value !== '') {
-                $encrypted = Crypt::encryptString($value);
+                $encrypted = Crypt::encryptString(trim((string) $value));
             }
 
             $type = 'text';

@@ -13,6 +13,8 @@ class SatuSehatClient
     private const TOKEN_CACHE_KEY = 'satusehat:access_token';
     private const TOKEN_EXPIRY_BUFFER = 60;
 
+    private string $lastTokenError = 'Periksa Client ID dan Client Secret.';
+
     private ?string $baseUrl = null;
     private ?string $clientId = null;
     private ?string $clientSecret = null;
@@ -47,8 +49,8 @@ class SatuSehatClient
             }
         }
 
-        $this->clientId = $settings['satusehat_client_id'] ?? null;
-        $this->clientSecret = $settings['satusehat_client_secret'] ?? null;
+        $this->clientId = isset($settings['satusehat_client_id']) ? trim((string) $settings['satusehat_client_id']) : null;
+        $this->clientSecret = isset($settings['satusehat_client_secret']) ? trim((string) $settings['satusehat_client_secret']) : null;
         $this->webhookSecret = $settings['satusehat_webhook_secret'] ?? null;
     }
 
@@ -76,7 +78,7 @@ class SatuSehatClient
             if ($token === null) {
                 return [
                     'ok' => false,
-                    'error' => 'Gagal mendapatkan access token. Periksa Client ID dan Client Secret.',
+                    'error' => 'Gagal mendapatkan access token. ' . $this->lastTokenError,
                 ];
             }
 
@@ -142,8 +144,13 @@ class SatuSehatClient
                 ]);
 
             if (! $response->successful()) {
+                $excerpt = mb_substr(trim($response->body() ?? ''), 0, 300);
+                $this->lastTokenError = 'HTTP ' . $response->status()
+                    . ($excerpt !== '' ? ' — ' . $excerpt : '')
+                    . ' (cek Base URL dev vs prod & Client ID/Secret).';
                 Log::error('SatuSehat token request failed', [
                     'status' => $response->status(),
+                    'body' => $excerpt,
                 ]);
 
                 return null;
@@ -153,6 +160,7 @@ class SatuSehatClient
 
             $token = $data['access_token'] ?? null;
             if (! $token) {
+                $this->lastTokenError = 'Respon token tidak berisi access_token: ' . mb_substr(trim($response->body() ?? ''), 0, 300);
                 Log::error('SatuSehat token response missing access_token');
 
                 return null;
@@ -165,6 +173,7 @@ class SatuSehatClient
 
             return $token;
         } catch (\Throwable $e) {
+            $this->lastTokenError = 'Koneksi ke server Satu Sehat gagal: ' . $e->getMessage();
             Log::error('SatuSehat token exception: ' . $e->getMessage());
 
             return null;
