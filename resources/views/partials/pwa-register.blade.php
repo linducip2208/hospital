@@ -50,28 +50,25 @@
     }
 
     function promptUpdate(worker) {
-        // Tampilkan prompt maksimal 1x per sesi agar tidak loop ("selalu begini")
+        // Update diam-diam tanpa confirm: dialog "Refresh sekarang?" adalah
+        // sumber loop — user Cancel = worker tetap waiting = prompt lagi.
+        applyUpdate(worker);
+    }
+
+    function applyUpdate(worker) {
+        // Batasi reload maksimal 1x per 30 detik agar tak beruntun
         try {
-            if (sessionStorage.getItem('pwa-update-prompted') === '1') {
-                // Sesi ini sudah ditanya: aktifkan diam-diam tanpa prompt
-                worker.postMessage({ type: 'SKIP_WAITING' });
-                return;
-            }
-            sessionStorage.setItem('pwa-update-prompted', '1');
+            var last = parseInt(sessionStorage.getItem('pwa-updated-at') || '0', 10);
+            if (Date.now() - last < 30000) return;
         } catch (e) {}
-        if (confirm('Versi baru aplikasi tersedia. Refresh sekarang?')) {
-            worker.postMessage({ type: 'SKIP_WAITING' });
-            var reloaded = false;
-            navigator.serviceWorker.addEventListener('controllerchange', function () {
-                if (reloaded) return;
-                reloaded = true;
-                location.reload();
-            });
-            // Fallback reload hanya jika controller tidak berganti (c egah reload ganda/loop)
-            setTimeout(function () {
-                if (! reloaded && ! navigator.serviceWorker.controller) location.reload();
-            }, 2500);
-        }
+        worker.postMessage({ type: 'SKIP_WAITING' });
+        var done = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (done) return;
+            done = true;
+            try { sessionStorage.setItem('pwa-updated-at', String(Date.now())); } catch (e) {}
+            location.reload();
+        });
     }
 
     // Install prompt handling
