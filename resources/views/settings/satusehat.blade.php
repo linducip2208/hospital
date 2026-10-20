@@ -27,31 +27,108 @@
             <div class="card-body">
                 <form action="{{ route('settings.satusehat.update') }}" method="POST">
                     @csrf @method('PUT')
+                    @php($activeEnv = old('satusehat_env', $settings['satusehat_env'] ?? 'stg'))
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Base URL</label>
-                            <input type="text" name="satusehat_base_url" class="form-control @error('satusehat_base_url') is-invalid @enderror" value="{{ old('satusehat_base_url', $settings['satusehat_base_url'] ?? '') }}" placeholder="https://api-satusehat-dev.dto.kemkes.go.id">
-                            @error('satusehat_base_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">DEV/sandbox: <code>https://api-satusehat-dev.dto.kemkes.go.id</code> · PROD: <code>https://api-satusehat.kemkes.go.id</code>. Kredensial developer hanya berlaku untuk DEV.</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Client ID</label>
-                            <input type="password" name="satusehat_client_id" class="form-control @error('satusehat_client_id') is-invalid @enderror" value="{{ old('satusehat_client_id', $settings['satusehat_client_id'] ?? '') }}" id="satusehatClientId" placeholder="Biarkan kosong jika tidak diubah">
-                            <div class="form-check mt-1">
-                                <input type="checkbox" class="form-check-input" id="showClientId">
-                                <label class="form-check-label small" for="showClientId">Tampilkan</label>
+                            <label class="form-label">Environment Aktif</label>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <div class="form-check">
+                                    <input type="radio" name="satusehat_env" class="form-check-input" value="stg" id="envStg" @checked($activeEnv === 'stg')>
+                                    <label class="form-check-label" for="envStg"><span class="badge bg-info text-dark">Staging / STG</span></label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="satusehat_env" class="form-check-input" value="dev" id="envDev" @checked($activeEnv === 'dev')>
+                                    <label class="form-check-label" for="envDev"><span class="badge bg-warning text-dark">Developer / DEV</span></label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" name="satusehat_env" class="form-check-input" value="prod" id="envProd" @checked($activeEnv === 'prod')>
+                                    <label class="form-check-label" for="envProd"><span class="badge bg-success">Produksi</span></label>
+                                </div>
                             </div>
-                            @error('satusehat_client_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Token &amp; koneksi memakai environment yang aktif. Kredensial STG, DEV, dan PROD tersimpan terpisah.</small>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Client Secret</label>
-                            <input type="password" name="satusehat_client_secret" class="form-control @error('satusehat_client_secret') is-invalid @enderror" placeholder="Biarkan kosong jika tidak diubah">
-                            @error('satusehat_client_secret') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <div class="border border-info rounded p-3">
+                                <h6 class="mb-3"><span class="badge bg-info text-dark">Staging / STG</span></h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL (FHIR)</label>
+                                        <input type="text" name="satusehat_stg_base_url" class="form-control" value="{{ old('satusehat_stg_base_url', $settings['satusehat_stg_base_url'] ?? 'https://api-satusehat-stg.dto.kemkes.go.id') }}" placeholder="https://api-satusehat-stg.dto.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL Auth (token)</label>
+                                        <input type="text" name="satusehat_stg_auth_base_url" class="form-control" value="{{ old('satusehat_stg_auth_base_url', $settings['satusehat_stg_auth_base_url'] ?? 'https://api-satusehat-stg.dto.kemkes.go.id') }}" placeholder="https://api-satusehat-stg.dto.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client ID (Staging)</label>
+                                        <input type="password" name="satusehat_stg_client_id" class="form-control dev-secret" value="{{ old('satusehat_stg_client_id', $settings['satusehat_stg_client_id'] ?? '') }}" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client Secret (Staging)</label>
+                                        <input type="password" name="satusehat_stg_client_secret" class="form-control dev-secret" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Organization ID (Staging)</label>
+                                        <input type="text" name="satusehat_stg_organization_id" class="form-control" value="{{ old('satusehat_stg_organization_id', $settings['satusehat_stg_organization_id'] ?? '') }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Organization ID</label>
-                            <input type="text" name="satusehat_organization_id" class="form-control @error('satusehat_organization_id') is-invalid @enderror" value="{{ old('satusehat_organization_id', $settings['satusehat_organization_id'] ?? '') }}">
-                            @error('satusehat_organization_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="col-12">
+                            <div class="border border-warning rounded p-3">
+                                <h6 class="mb-3"><span class="badge bg-warning text-dark">Developer / DEV</span></h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL (FHIR)</label>
+                                        <input type="text" name="satusehat_dev_base_url" class="form-control" value="{{ old('satusehat_dev_base_url', $settings['satusehat_dev_base_url'] ?? 'https://api-satusehat-dev.dto.kemkes.go.id') }}" placeholder="https://api-satusehat-dev.dto.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL Auth (token)</label>
+                                        <input type="text" name="satusehat_dev_auth_base_url" class="form-control" value="{{ old('satusehat_dev_auth_base_url', $settings['satusehat_dev_auth_base_url'] ?? 'https://api-satusehat-dev.dto.kemkes.go.id') }}" placeholder="https://api-satusehat-dev.dto.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client ID (Developer)</label>
+                                        <input type="password" name="satusehat_dev_client_id" class="form-control dev-secret" value="{{ old('satusehat_dev_client_id', $settings['satusehat_dev_client_id'] ?? '') }}" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client Secret (Developer)</label>
+                                        <input type="password" name="satusehat_dev_client_secret" class="form-control dev-secret" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Organization ID (Developer)</label>
+                                        <input type="text" name="satusehat_dev_organization_id" class="form-control" value="{{ old('satusehat_dev_organization_id', $settings['satusehat_dev_organization_id'] ?? '') }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="border border-success rounded p-3">
+                                <h6 class="mb-3"><span class="badge bg-success">Produksi</span></h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL (FHIR)</label>
+                                        <input type="text" name="satusehat_prod_base_url" class="form-control" value="{{ old('satusehat_prod_base_url', $settings['satusehat_prod_base_url'] ?? 'https://api-satusehat.kemkes.go.id') }}" placeholder="https://api-satusehat.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Base URL Auth (token)</label>
+                                        <input type="text" name="satusehat_prod_auth_base_url" class="form-control" value="{{ old('satusehat_prod_auth_base_url', $settings['satusehat_prod_auth_base_url'] ?? 'https://api-satusehat.kemkes.go.id') }}" placeholder="https://api-satusehat.kemkes.go.id">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client ID (Produksi)</label>
+                                        <input type="password" name="satusehat_prod_client_id" class="form-control dev-secret" value="{{ old('satusehat_prod_client_id', $settings['satusehat_prod_client_id'] ?? '') }}" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Client Secret (Produksi)</label>
+                                        <input type="password" name="satusehat_prod_client_secret" class="form-control dev-secret" placeholder="Biarkan kosong jika tidak diubah">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Organization ID (Produksi)</label>
+                                        <input type="text" name="satusehat_prod_organization_id" class="form-control" value="{{ old('satusehat_prod_organization_id', $settings['satusehat_prod_organization_id'] ?? '') }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check mb-2">
@@ -59,11 +136,17 @@
                                 <label class="form-check-label" for="satusehatEnabled">Aktifkan Integrasi</label>
                             </div>
                         </div>
+                        <div class="col-md-6 d-flex align-items-end justify-content-end">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="showSecrets">
+                                <label class="form-check-label small" for="showSecrets">Tampilkan secret</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-4 d-flex gap-2">
+                    <div class="mt-4 d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan Konfigurasi</button>
                         <button type="button" class="btn btn-outline-info" id="testConnectionBtn" onclick="testConnection()">
-                            <i class="bi bi-plug"></i> <span id="testConnText">Tes Koneksi</span>
+                            <i class="bi bi-plug"></i> <span id="testConnText">Tes Koneksi (env aktif)</span>
                         </button>
                     </div>
                 </form>
@@ -77,10 +160,21 @@
             <div class="card-body">
                 <form action="{{ route('settings.satusehat.update') }}" method="POST">
                     @csrf @method('PUT')
-                    <input type="hidden" name="satusehat_base_url" value="{{ old('satusehat_base_url', $settings['satusehat_base_url'] ?? '') }}">
-                    <input type="hidden" name="satusehat_client_id" value="{{ old('satusehat_client_id', $settings['satusehat_client_id'] ?? '') }}">
-                    <input type="hidden" name="satusehat_client_secret">
-                    <input type="hidden" name="satusehat_organization_id" value="{{ old('satusehat_organization_id', $settings['satusehat_organization_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_env" value="{{ old('satusehat_env', $settings['satusehat_env'] ?? 'stg') }}">
+                    <input type="hidden" name="satusehat_stg_base_url" value="{{ old('satusehat_stg_base_url', $settings['satusehat_stg_base_url'] ?? '') }}">
+                    <input type="hidden" name="satusehat_stg_auth_base_url" value="{{ old('satusehat_stg_auth_base_url', $settings['satusehat_stg_auth_base_url'] ?? '') }}">
+                    <input type="hidden" name="satusehat_stg_client_id" value="{{ old('satusehat_stg_client_id', $settings['satusehat_stg_client_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_stg_client_secret">
+                    <input type="hidden" name="satusehat_stg_organization_id" value="{{ old('satusehat_stg_organization_id', $settings['satusehat_stg_organization_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_dev_base_url" value="{{ old('satusehat_dev_base_url', $settings['satusehat_dev_base_url'] ?? '') }}">
+                    <input type="hidden" name="satusehat_dev_auth_base_url" value="{{ old('satusehat_dev_auth_base_url', $settings['satusehat_dev_auth_base_url'] ?? '') }}">
+                    <input type="hidden" name="satusehat_dev_client_id" value="{{ old('satusehat_dev_client_id', $settings['satusehat_dev_client_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_dev_client_secret">
+                    <input type="hidden" name="satusehat_dev_organization_id" value="{{ old('satusehat_dev_organization_id', $settings['satusehat_dev_organization_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_prod_base_url" value="{{ old('satusehat_prod_base_url', $settings['satusehat_prod_base_url'] ?? '') }}">
+                    <input type="hidden" name="satusehat_prod_client_id" value="{{ old('satusehat_prod_client_id', $settings['satusehat_prod_client_id'] ?? '') }}">
+                    <input type="hidden" name="satusehat_prod_client_secret">
+                    <input type="hidden" name="satusehat_prod_organization_id" value="{{ old('satusehat_prod_organization_id', $settings['satusehat_prod_organization_id'] ?? '') }}">
                     <input type="hidden" name="satusehat_is_enabled" value="{{ $settings['satusehat_is_enabled'] ?? '0' }}">
                     <div class="row g-3">
                         <div class="col-12">
@@ -118,6 +212,7 @@
                 <i class="bi bi-plug me-2"></i> Status Koneksi
             </div>
             <div class="card-body text-center">
+                @php($activeEnv = $settings['satusehat_env'] ?? 'stg')
                 @if($settings['satusehat_is_enabled'] ?? false)
                     <i class="bi bi-check-circle text-success display-3"></i>
                     <h5 class="mt-2 text-success">Terhubung</h5>
@@ -125,6 +220,8 @@
                     <i class="bi bi-x-circle text-secondary display-3"></i>
                     <h5 class="mt-2 text-muted">Belum terhubung</h5>
                 @endif
+                @php($envBadge = $activeEnv === 'prod' ? ['bg-success', 'Produksi'] : ($activeEnv === 'dev' ? ['bg-warning text-dark', 'Developer / DEV'] : ['bg-info text-dark', 'Staging / STG']))
+                <span class="badge {{ $envBadge[0] }}">{{ $envBadge[1] }}</span>
             </div>
         </div>
 
@@ -147,9 +244,10 @@
 
 @push('scripts')
 <script>
-document.getElementById('showClientId').addEventListener('change', function() {
-    var el = document.getElementById('satusehatClientId');
-    el.type = this.checked ? 'text' : 'password';
+document.getElementById('showSecrets').addEventListener('change', function() {
+    document.querySelectorAll('.dev-secret').forEach(function(el) {
+        el.type = this.checked ? 'text' : 'password';
+    }, this);
 });
 
 function testConnection() {

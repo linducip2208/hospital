@@ -12,6 +12,14 @@ class SatuSehatClient
 {
     private const TOKEN_CACHE_KEY = 'satusehat:access_token';
     private const TOKEN_EXPIRY_BUFFER = 60;
+    public const STG_BASE_URL = 'https://api-satusehat-stg.dto.kemkes.go.id';
+    public const DEV_BASE_URL = 'https://api-satusehat-dev.dto.kemkes.go.id';
+    public const PROD_BASE_URL = 'https://api-satusehat.kemkes.go.id';
+
+    private const ENVS = ['stg', 'dev', 'prod'];
+
+    private string $env = 'stg';
+    private ?string $authBaseUrl = null;
 
     private string $lastTokenError = 'Periksa Client ID dan Client Secret.';
 
@@ -33,25 +41,44 @@ class SatuSehatClient
     {
         $settings = Setting::where('group', 'satu_sehat')->get()->pluck('value', 'key');
 
-        $this->baseUrl = rtrim($settings['satusehat_base_url'] ?? '', '/');
-        $this->organizationId = $settings['satusehat_organization_id'] ?? null;
+        $env = strtolower(trim((string) ($settings['satusehat_env'] ?? 'stg')));
+        $this->env = in_array($env, self::ENVS, true) ? $env : 'stg';
+        $prefix = 'satusehat_' . $this->env . '_';
+
+        $base = trim((string) ($settings[$prefix . 'base_url'] ?? $settings['satusehat_base_url'] ?? ''));
+        if ($base === '') {
+            $base = $this->defaultBaseUrl($this->env);
+        }
+        $this->baseUrl = rtrim($base, '/');
+
+        // Auth host boleh beda dari FHIR host (seperti "BASE URL AUTH" di referensi).
+        $authBase = trim((string) ($settings[$prefix . 'auth_base_url'] ?? ''));
+        $this->authBaseUrl = $authBase !== '' ? rtrim($authBase, '/') : $this->baseUrl;
+
+        // Kredensial: kunci per-env (baru) didahulukan, kunci lama sebagai fallback.
+        $this->clientId = $this->decryptSetting($settings[$prefix . 'client_id'] ?? $settings['satusehat_client_id'] ?? null);
+        $this->clientSecret = $this->decryptSetting($settings[$prefix . 'client_secret'] ?? $settings['satusehat_client_secret'] ?? null);
+        $org = trim((string) ($settings[$prefix . 'organization_id'] ?? $settings['satusehat_organization_id'] ?? ''));
+        $this->organizationId = $org !== '' ? $org : null;
+
         $this->isEnabled = (bool) ($settings['satusehat_is_enabled'] ?? false);
         $this->webhookUrl = $settings['satusehat_webhook_url'] ?? null;
         $this->webhookEnabled = (bool) ($settings['satusehat_webhook_enabled'] ?? false);
+        $this->webhookSecret = $this->decryptSetting($settings['satusehat_webhook_secret'] ?? null);
+    }
 
-        foreach (['satusehat_client_id', 'satusehat_client_secret', 'satusehat_webhook_secret'] as $key) {
-            if (! empty($settings[$key])) {
-                try {
-                    $settings[$key] = Crypt::decryptString($settings[$key]);
-                } catch (\Illuminate\Contracts\Encryption\DecryptException) {
-                    $settings[$key] = null;
-                }
-            }
+    private function decryptSetting(mixed $value): ?string    {
+        if ($value === null || $value === '') {
+            return null;
         }
+        try {
+            $dec = Crypt::decryptString((string) $value);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+            return null;
+        }
+        $dec = trim($dec);
 
-        $this->clientId = isset($settings['satusehat_client_id']) ? trim((string) $settings['satusehat_client_id']) : null;
-        $this->clientSecret = isset($settings['satusehat_client_secret']) ? trim((string) $settings['satusehat_client_secret']) : null;
-        $this->webhookSecret = $settings['satusehat_webhook_secret'] ?? null;
+        return $dec !== '' ? $dec : null;
     }
 
     public function isConfigured(): bool
@@ -94,7 +121,7 @@ class SatuSehatClient
 
                 return [
                     'ok' => true,
-                    'message' => 'Koneksi ke Satu Sehat berhasil. Organisasi: ' . $orgName,
+                    'message' => 'Koneksi ke Satu Sehat (' . strtoupper($this->env) . ') berhasil. Organisasi: ' . $orgName,
                     'organization_name' => $body['name'] ?? null,
                 ];
             }
@@ -124,7 +151,7 @@ class SatuSehatClient
 
     public function getToken(): ?string
     {
-        $cached = Cache::get(self::TOKEN_CACHE_KEY);
+        $cached = Cache::get($this->tokenCacheKey());
         if ($cached) {
             return $cached;
         }
@@ -137,7 +164,7 @@ class SatuSehatClient
             $response = Http::timeout(15)
                 ->withHeaders(['Content-Type' => 'application/x-www-form-urlencoded'])
                 ->asForm()
-                ->post($this->baseUrl . '/oauth2/v1/accesstoken', [
+                ->post($this->authBaseUrl . '/oauth2/v1/accesstoken', [
                     'client_id' => $this->clientId,
                     'client_secret' => $this->clientSecret,
                     'grant_type' => 'client_credentials',
@@ -169,7 +196,7 @@ class SatuSehatClient
             $expiresIn = (int) ($data['expires_in'] ?? 3600);
             $ttl = max(60, $expiresIn - self::TOKEN_EXPIRY_BUFFER);
 
-            Cache::put(self::TOKEN_CACHE_KEY, $token, now()->addSeconds($ttl));
+            Cache::put($this->tokenCacheKey(), $token, now()->addSeconds($ttl));
 
             return $token;
         } catch (\Throwable $e) {
@@ -182,7 +209,17 @@ class SatuSehatClient
 
     public function clearToken(): void
     {
-        Cache::forget(self::TOKEN_CACHE_KEY);
+        Cache::forget($this->tokenCacheKey());
+    }
+
+    public function getEnv(): string
+    {
+        return $this->env;
+    }
+
+    private function tokenCacheKey(): string
+    {
+        return self::TOKEN_CACHE_KEY . ':' . $this->env;
     }
 
     public function get(string $path, array $query = []): ?array
@@ -374,6 +411,20 @@ class SatuSehatClient
     public function getBaseUrl(): ?string
     {
         return $this->baseUrl;
+    }
+
+    public function getAuthBaseUrl(): ?string
+    {
+        return $this->authBaseUrl;
+    }
+
+    private function defaultBaseUrl(string $env): string
+    {
+        return match ($env) {
+            'prod' => self::PROD_BASE_URL,
+            'dev' => self::DEV_BASE_URL,
+            default => self::STG_BASE_URL,
+        };
     }
 
     public function isEnabled(): bool

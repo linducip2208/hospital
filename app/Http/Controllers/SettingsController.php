@@ -42,7 +42,7 @@ class SettingsController extends Controller
     {
         $settings = Setting::where('group', 'satu_sehat')->get()->pluck('value', 'key')->toArray();
 
-        foreach (['satusehat_client_id', 'satusehat_client_secret', 'satusehat_webhook_secret'] as $key) {
+        foreach (['satusehat_client_id', 'satusehat_client_secret', 'satusehat_stg_client_id', 'satusehat_stg_client_secret', 'satusehat_dev_client_id', 'satusehat_dev_client_secret', 'satusehat_prod_client_id', 'satusehat_prod_client_secret', 'satusehat_webhook_secret'] as $key) {
             if (! empty($settings[$key])) {
                 try {
                     $settings[$key] = Crypt::decryptString($settings[$key]);
@@ -52,16 +52,36 @@ class SettingsController extends Controller
             }
         }
 
+        if (empty($settings['satusehat_env']) || ! in_array($settings['satusehat_env'], ['stg', 'dev', 'prod'], true)) {
+            $settings['satusehat_env'] = 'stg';
+        }
+
         return view('settings.satusehat', compact('settings'));
     }
 
     public function satusehatUpdate(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'satusehat_env' => 'nullable|in:stg,dev,prod',
             'satusehat_base_url' => 'nullable|url',
             'satusehat_client_id' => 'nullable|string',
             'satusehat_client_secret' => 'nullable|string',
             'satusehat_organization_id' => 'nullable|string',
+            'satusehat_stg_base_url' => 'nullable|url',
+            'satusehat_stg_auth_base_url' => 'nullable|url',
+            'satusehat_stg_client_id' => 'nullable|string',
+            'satusehat_stg_client_secret' => 'nullable|string',
+            'satusehat_stg_organization_id' => 'nullable|string',
+            'satusehat_dev_base_url' => 'nullable|url',
+            'satusehat_dev_auth_base_url' => 'nullable|url',
+            'satusehat_dev_client_id' => 'nullable|string',
+            'satusehat_dev_client_secret' => 'nullable|string',
+            'satusehat_dev_organization_id' => 'nullable|string',
+            'satusehat_prod_base_url' => 'nullable|url',
+            'satusehat_prod_auth_base_url' => 'nullable|url',
+            'satusehat_prod_client_id' => 'nullable|string',
+            'satusehat_prod_client_secret' => 'nullable|string',
+            'satusehat_prod_organization_id' => 'nullable|string',
             'satusehat_is_enabled' => 'nullable|boolean',
             'satusehat_webhook_url' => 'nullable|url',
             'satusehat_webhook_secret' => 'nullable|string',
@@ -71,7 +91,32 @@ class SettingsController extends Controller
         $encryptedKeys = [
             'satusehat_client_id',
             'satusehat_client_secret',
+            'satusehat_stg_client_id',
+            'satusehat_stg_client_secret',
+            'satusehat_dev_client_id',
+            'satusehat_dev_client_secret',
+            'satusehat_prod_client_id',
+            'satusehat_prod_client_secret',
             'satusehat_webhook_secret',
+        ];
+
+        $labels = [
+            'satusehat_env' => 'Environment',
+            'satusehat_stg_base_url' => 'Stg Base Url',
+            'satusehat_stg_auth_base_url' => 'Stg Auth Base Url',
+            'satusehat_stg_client_id' => 'Stg Client Id',
+            'satusehat_stg_client_secret' => 'Stg Client Secret',
+            'satusehat_stg_organization_id' => 'Stg Organization Id',
+            'satusehat_dev_base_url' => 'Dev Base Url',
+            'satusehat_dev_auth_base_url' => 'Dev Auth Base Url',
+            'satusehat_dev_client_id' => 'Dev Client Id',
+            'satusehat_dev_client_secret' => 'Dev Client Secret',
+            'satusehat_dev_organization_id' => 'Dev Organization Id',
+            'satusehat_prod_base_url' => 'Prod Base Url',
+            'satusehat_prod_auth_base_url' => 'Prod Auth Base Url',
+            'satusehat_prod_client_id' => 'Prod Client Id',
+            'satusehat_prod_client_secret' => 'Prod Client Secret',
+            'satusehat_prod_organization_id' => 'Prod Organization Id',
         ];
 
         foreach ($validated as $key => $value) {
@@ -95,7 +140,7 @@ class SettingsController extends Controller
                 'value' => $encrypted,
                 'group' => 'satu_sehat',
                 'type' => $type,
-                'label' => ucwords(str_replace('_', ' ', substr($key, 10))),
+                'label' => $labels[$key] ?? ucwords(str_replace('_', ' ', substr($key, 10))),
             ]);
         }
         return back()->with('success', 'Konfigurasi Satu Sehat berhasil disimpan.');
