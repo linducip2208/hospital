@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApiToken extends Model
 {
-    protected $fillable = ['user_id', 'name', 'token_hash', 'last_used_at'];
+    protected $fillable = ['user_id', 'name', 'token_hash', 'expires_at', 'last_used_at'];
 
-    protected $casts = ['last_used_at' => 'datetime'];
+    protected $casts = ['expires_at' => 'datetime', 'last_used_at' => 'datetime'];
 
     protected $hidden = ['token_hash'];
 
