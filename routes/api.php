@@ -55,17 +55,17 @@ Route::prefix('v1')->middleware(['api.auth', 'throttle:api'])->name('api.')->gro
         Route::get('invoices/{invoice}', [PatientSelfController::class, 'showInvoice'])->name('invoices.show');
     });
 
-    // CRUD generik semua modul staf (lihat config/api_resources.php)
-    foreach (array_keys(config('api_resources', [])) as $slug) {
-        Route::get($slug, [GenericResourceApiController::class, 'index'])
-            ->defaults('resource', $slug)->name("generic.{$slug}.index");
-        Route::post($slug, [GenericResourceApiController::class, 'store'])
-            ->defaults('resource', $slug)->name("generic.{$slug}.store");
-        Route::get("{$slug}/{id}", [GenericResourceApiController::class, 'show'])
-            ->whereNumber('id')->defaults('resource', $slug)->name("generic.{$slug}.show");
-        Route::match(['put', 'patch'], "{$slug}/{id}", [GenericResourceApiController::class, 'update'])
-            ->whereNumber('id')->defaults('resource', $slug)->name("generic.{$slug}.update");
-        Route::delete("{$slug}/{id}", [GenericResourceApiController::class, 'destroy'])
-            ->whereNumber('id')->defaults('resource', $slug)->name("generic.{$slug}.destroy");
-    }
+    // CRUD generik semua modul staf (lihat config/api_resources.php).
+    // {resource} dibatasi regex ke slug generik agar tidak menelan route khusus.
+    $genericSlugs = implode('|', array_map('preg_quote', array_keys(config('api_resources', []))));
+    Route::get('{resource}', [GenericResourceApiController::class, 'index'])
+        ->where('resource', $genericSlugs)->name('generic.index');
+    Route::post('{resource}', [GenericResourceApiController::class, 'store'])
+        ->where('resource', $genericSlugs)->name('generic.store');
+    Route::get('{resource}/{id}', [GenericResourceApiController::class, 'show'])
+        ->where(['resource' => $genericSlugs, 'id' => '[0-9]+'])->name('generic.show');
+    Route::match(['put', 'patch'], '{resource}/{id}', [GenericResourceApiController::class, 'update'])
+        ->where(['resource' => $genericSlugs, 'id' => '[0-9]+'])->name('generic.update');
+    Route::delete('{resource}/{id}', [GenericResourceApiController::class, 'destroy'])
+        ->where(['resource' => $genericSlugs, 'id' => '[0-9]+'])->name('generic.destroy');
 });

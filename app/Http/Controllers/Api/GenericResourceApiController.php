@@ -112,7 +112,7 @@ class GenericResourceApiController extends Controller
     public function destroy(Request $request, string $resource, string $id): JsonResponse
     {
         $config = $this->resolve($resource);
-        $this->authorizeResource($request, $config, 'write');
+        $this->authorizeResource($request, $config, 'delete');
         $record = $this->model($config)->newQuery()->findOrFail((int) $id);
         $record->delete();
         \App\Services\ActivityLogger::log('deleted', $record, null, ['via' => 'api', 'resource' => $resource]);
@@ -128,9 +128,19 @@ class GenericResourceApiController extends Controller
         if (in_array($user->role, ['admin', 'developer'], true)) {
             return;
         }
-        $allowed = $config[$action === 'read' ? 'read_roles' : 'write_roles'] ?? null;
-        if (is_array($allowed)) {
-            abort_unless(in_array($user->role, $allowed, true), 403, 'Peran Anda tidak boleh mengakses modul ini via API.');
+        $key = $action === 'read' ? 'read_roles' : ($action === 'delete' ? 'delete_roles' : 'write_roles');
+        if (array_key_exists($key, $config)) {
+            // null = semua staf boleh; array = hanya peran tersebut.
+            if (is_array($config[$key])) {
+                abort_unless(in_array($user->role, $config[$key], true), 403, 'Peran Anda tidak boleh mengakses modul ini via API.');
+            }
+
+            return;
+        }
+        // Default hapus = admin/developer saja (anti penghapusan massal via API).
+        // Baca/tulis default = semua staf (sama seperti akses web).
+        if ($action === 'delete') {
+            abort(403, 'Hapus data via API hanya untuk admin/developer.');
         }
     }
 

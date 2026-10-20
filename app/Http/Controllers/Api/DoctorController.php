@@ -74,8 +74,9 @@ class DoctorController extends Controller
         return response()->json($doctor);
     }
 
-    public function destroy(Doctor $doctor): JsonResponse
+    public function destroy(Request $request, Doctor $doctor): JsonResponse
     {
+        abort_unless(in_array($request->user()?->role, ['admin', 'developer'], true), 403);
         $doctor->delete();
         return response()->json(null, 204);
     }

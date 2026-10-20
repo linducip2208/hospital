@@ -84,8 +84,22 @@ class ApiSmokeTest extends TestCase
             }
         }
 
+        // Endpoint generik: index 200 + show ID-acak 404
+        foreach (array_keys(config('api_resources', [])) as $slug) {
+            $checked++;
+            $res = $this->staff()->getJson('/api/v1/' . $slug);
+            if (! in_array($res->status(), [200, 403], true)) {
+                $failures[] = "GET /api/v1/{$slug} => {$res->status()}";
+            }
+            $checked++;
+            $res = $this->staff()->getJson("/api/v1/{$slug}/999999");
+            if ($res->status() !== 404) {
+                $failures[] = "GET /api/v1/{$slug}/999999 => {$res->status()} (harusnya 404)";
+            }
+        }
+
         $this->assertSame([], $failures, "Endpoint bermasalah:\n" . implode("\n", $failures));
-        $this->assertGreaterThan(50, $checked, 'Terlalu sedikit endpoint ter periksa.');
+        $this->assertGreaterThan(50, $checked, 'Terlalu sedikit endpoint terperiksa.');
     }
 
     public function test_show_unknown_id_returns_404_not_500(): void

@@ -122,8 +122,9 @@ class AppointmentController extends Controller
         return response()->json($appointment);
     }
 
-    public function destroy(Appointment $appointment): JsonResponse
+    public function destroy(Request $request, Appointment $appointment): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('appointments.manage'), 403);
         $appointment->delete();
         return response()->json(null, 204);
     }

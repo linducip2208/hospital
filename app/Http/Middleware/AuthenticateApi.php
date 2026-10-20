@@ -44,8 +44,8 @@ class AuthenticateApi
             if ($patientToken->isExpired()) {
                 return $this->unauthorized('Token kedaluwarsa. Silakan login ulang atau refresh token.');
             }
-            if (! $patientToken->patient) {
-                return $this->unauthorized('Token tidak valid atau sudah tidak aktif.');
+            if (! $patientToken->patient || ! $patientToken->patient->is_active) {
+                return $this->unauthorized('Token tidak valid atau akun pasien tidak aktif.');
             }
             Auth::guard('patient')->setUser($patientToken->patient);
             $patientToken->forceFill(['last_used_at' => now()])->saveQuietly();

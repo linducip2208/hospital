@@ -54,6 +54,43 @@ class ApiSecurityTest extends TestCase
         $this->as($cashier)->getJson('/api/v1/drugs')->assertOk();
     }
 
+    public function test_hapus_data_dibatasi_admin(): void
+    {
+        $cashier = $this->staffToken('cashier', 'kasir2@hospital.test');
+        $admin = $this->staffToken('admin', 'admin3@hospital.test');
+
+        $drug = \App\Models\Drug::factory()->create();
+        $patient = \App\Models\Patient::factory()->create();
+
+        // Kasir tidak boleh hapus obat/pasien/appointment
+        $this->as($cashier)->deleteJson("/api/v1/drugs/{$drug->id}")->assertForbidden();
+        $this->as($cashier)->deleteJson("/api/v1/patients/{$patient->id}")->assertForbidden();
+        $appointment = \App\Models\Appointment::factory()->create();
+        $this->as($cashier)->deleteJson("/api/v1/appointments/{$appointment->id}")->assertForbidden();
+
+        // Admin boleh hapus (soft delete → data masih bisa dipulihkan)
+        $this->as($admin)->deleteJson("/api/v1/drugs/{$drug->id}")->assertNoContent();
+        $this->assertSoftDeleted('drugs', ['id' => $drug->id]);
+
+        // Antrian operasional boleh dihapus staf garis depan
+        $queue = \App\Models\Queue::create([
+            'polyclinic_id' => \App\Models\Polyclinic::create(['name' => 'Poli Umum', 'code' => 'PU-01'])->id,
+            'patient_id' => $patient->id,
+            'queue_number' => 'A-001',
+        ]);
+        $this->as($cashier)->deleteJson("/api/v1/queues/{$queue->id}")->assertNoContent();
+    }
+
+    public function test_pasien_nonaktif_ditolak(): void
+    {
+        $patient = Patient::factory()->create([
+            'password' => Hash::make('pasien123'), 'is_active' => false,
+        ]);
+        $this->postJson('/api/auth/patients/tokens', [
+            'email' => $patient->email, 'password' => 'pasien123',
+        ])->assertForbidden();
+    }
+
     public function test_pasien_bisa_mencabut_token_sendiri(): void
     {
         $patient = Patient::factory()->create(['password' => Hash::make('pasien123')]);

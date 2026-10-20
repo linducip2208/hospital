@@ -122,7 +122,7 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): JsonResponse
     {
-        abort_unless(request()->user()?->hasPermission('billing.manage'), 403);
+        abort_unless(in_array(request()->user()?->role, ['admin', 'developer', 'finance'], true), 403);
         $payment->delete();
 
         return response()->json(null, 204);

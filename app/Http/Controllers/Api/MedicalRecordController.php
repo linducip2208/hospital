@@ -75,8 +75,9 @@ class MedicalRecordController extends Controller
         return response()->json($medicalRecord);
     }
 
-    public function destroy(MedicalRecord $medicalRecord): JsonResponse
+    public function destroy(Request $request, MedicalRecord $medicalRecord): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('medical_records.sign'), 403);
         $medicalRecord->delete();
         return response()->json(null, 204);
     }

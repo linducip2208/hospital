@@ -89,7 +89,7 @@ class PatientController extends Controller
 
     public function destroy(Request $request, Patient $patient): JsonResponse
     {
-        abort_unless($request->user()?->hasPermission('patients.update'), 403);
+        abort_unless(in_array($request->user()?->role, ['admin', 'developer'], true), 403);
         $patient->delete();
 
         return response()->json(null, 204);

@@ -63,12 +63,14 @@ use App\Models\Vendor;
 use App\Models\VitalSignsRecord;
 
 /*
- * Modul dengan 'read_roles'/'write_roles' dibatasi per peran (selain itu:
- * semua staf boleh baca, semua staf boleh tulis). admin & developer
- * selalu lolos. Token pasien selalu ditolak (403).
+ * Modul dengan 'read_roles'/'write_roles'/'delete_roles' dibatasi per peran
+ * (selain itu: baca & tulis semua staf, HAPUS hanya admin/developer).
+ * admin & developer selalu lolos. Token pasien selalu ditolak (403).
+ * 'delete_roles' => null berarti hapus boleh oleh semua staf (modul operasional).
  */
 return [
-    'queues' => ['model' => Queue::class],
+    'queues' => ['model' => Queue::class, 'delete_roles' => null],
+    'ambulance-calls' => ['model' => AmbulanceCall::class, 'delete_roles' => null],
     'encounters' => ['model' => Encounter::class],
     'admissions' => ['model' => Admission::class],
     'vital-signs' => ['model' => VitalSignsRecord::class],
@@ -107,7 +109,7 @@ return [
     'equipment-maintenances' => ['model' => EquipmentMaintenance::class],
     'medical-wastes' => ['model' => MedicalWaste::class],
     'ambulances' => ['model' => Ambulance::class],
-    'ambulance-calls' => ['model' => AmbulanceCall::class],
+    'ambulance-calls' => ['model' => AmbulanceCall::class, 'delete_roles' => null],
     'code-blue-activations' => ['model' => CodeBlueActivation::class],
     'patient-screenings' => ['model' => PatientScreening::class],
     'patient-feedbacks' => ['model' => PatientFeedback::class],

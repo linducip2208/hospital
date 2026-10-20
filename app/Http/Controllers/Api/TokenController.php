@@ -98,6 +98,9 @@ class TokenController
         if (! $patient || ! $patient->password || ! Hash::check($credentials['password'], $patient->password)) {
             return response()->json(['message' => 'Email atau password salah.'], 401);
         }
+        if (! $patient->is_active) {
+            return response()->json(['message' => 'Akun pasien tidak aktif. Hubungi administrasi.'], 403);
+        }
 
         $patient->forceFill(['portal_last_login_at' => now()])->saveQuietly();
 

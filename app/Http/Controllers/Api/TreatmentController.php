@@ -71,8 +71,9 @@ class TreatmentController extends Controller
         return response()->json($treatment);
     }
 
-    public function destroy(Treatment $treatment): JsonResponse
+    public function destroy(Request $request, Treatment $treatment): JsonResponse
     {
+        abort_unless(in_array($request->user()?->role, ['admin', 'developer'], true), 403);
         $treatment->delete();
         return response()->json(null, 204);
     }
