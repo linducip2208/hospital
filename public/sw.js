@@ -3,11 +3,11 @@
 // Strategy: cache-first untuk static assets, network-first untuk page/API
 // ─────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'simrs-v1.0.0';
+const CACHE_VERSION = 'simrs-v1.0.1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
-// Asset wajib di-cache saat install
+// Asset wajib di-cache saat install (toleran gagal satu file)
 const STATIC_ASSETS = [
     '/',
     '/offline.html',
@@ -15,6 +15,8 @@ const STATIC_ASSETS = [
     '/icons/icon-192.png',
     '/icons/icon-512.png',
     '/icons/icon.svg',
+    '/icons/favicon-32.png',
+    '/icons/apple-touch-icon.png',
 ];
 
 // CDN assets — cache once
@@ -24,11 +26,22 @@ const CDN_PATTERNS = [
     /^https:\/\/images\.unsplash\.com/,
 ];
 
-// Install: precache static assets
+// Install: precache static assets (satu file gagal tidak menggagalkan semua)
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE)
-            .then((cache) => cache.addAll(STATIC_ASSETS))
+            .then(async (cache) => {
+                await Promise.allSettled(
+                    STATIC_ASSETS.map((url) =>
+                        fetch(url, { credentials: 'same-origin' })
+                            .then((res) => {
+                                if (res && res.ok) return cache.put(url, res.clone());
+                                return null;
+                            })
+                            .catch(() => null)
+                    )
+                );
+            })
             .then(() => self.skipWaiting())
     );
 });
@@ -77,7 +90,8 @@ self.addEventListener('fetch', (event) => {
     }
 
     // HTML page — network-first dengan fallback offline
-    if (request.headers.get('accept')?.includes('text/html')) {
+    const accept = request.headers.get('accept') || '';
+    if (request.mode === 'navigate' || accept.includes('text/html')) {
         event.respondWith(networkFirstWithOfflineFallback(request));
         return;
     }
@@ -94,7 +108,7 @@ async function cacheFirst(request, cacheName) {
     if (cached) return cached;
     try {
         const response = await fetch(request);
-        if (response.ok) cache.put(request, response.clone());
+        if (response && response.ok) cache.put(request, response.clone());
         return response;
     } catch (e) {
         return cached || new Response('Offline', { status: 503 });
@@ -105,7 +119,7 @@ async function networkFirst(request, cacheName) {
     const cache = await caches.open(cacheName);
     try {
         const response = await fetch(request);
-        if (response.ok) cache.put(request, response.clone());
+        if (response && response.ok) cache.put(request, response.clone());
         return response;
     } catch (e) {
         const cached = await cache.match(request);
@@ -117,7 +131,7 @@ async function networkFirstWithOfflineFallback(request) {
     const cache = await caches.open(DYNAMIC_CACHE);
     try {
         const response = await fetch(request);
-        if (response.ok) cache.put(request, response.clone());
+        if (response && response.ok) cache.put(request, response.clone());
         return response;
     } catch (e) {
         const cached = await cache.match(request);

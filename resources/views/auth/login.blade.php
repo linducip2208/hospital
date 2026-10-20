@@ -5,7 +5,7 @@
         ['role' => 'Dokter', 'email' => 'dr.andi@hospital.test', 'password' => 'password'],
         ['role' => 'Perawat', 'email' => 'nurse.rina@hospital.test', 'password' => 'password'],
         ['role' => 'Apoteker', 'email' => 'apt.dian@hospital.test', 'password' => 'password'],
-        ['role' => 'Kasir', 'email' => 'cashier@hospital.test', 'password' => 'password'],
+        ['role' => 'Kasir', 'email' => 'kasir.budi@hospital.test', 'password' => 'password'],
         ['role' => 'Finance', 'email' => 'finance@hospital.test', 'password' => 'password'],
     ];
 @endphp
@@ -13,17 +13,29 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SIMRS">
+    <meta name="description" content="Masuk ke SIMRS Hospital — Sistem Informasi Manajemen Rumah Sakit.">
     <title>Masuk — {{ config('app.name', 'SIMRS Hospital') }}</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root { --brand: #2563eb; --brand-dark: #0f172a; --brand-accent: #06b6d4; }
         * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; color: #172033; background: #f7f9fc; font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif; }
-        .auth-shell { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, .85fr); }
+        html { -webkit-text-size-adjust: 100%; }
+        body { min-height: 100vh; min-height: 100dvh; margin: 0; color: #172033; background: #f7f9fc; font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif; }
+        img { max-width: 100%; height: auto; }
+        .auth-shell { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, .85fr); }
         .auth-hero { position: relative; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 48px clamp(32px, 6vw, 96px); color: #fff; background: radial-gradient(circle at 12% 18%, rgba(6,182,212,.32), transparent 28%), linear-gradient(145deg, #2563eb 0%, #172554 53%, #0f172a 100%); }
         .auth-hero::before, .auth-hero::after { content: ''; position: absolute; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; pointer-events: none; }
         .auth-hero::before { width: 520px; height: 520px; right: -220px; top: -150px; }
@@ -48,7 +60,7 @@
         .field-label { display: block; margin-bottom: 8px; color: #334155; font-size: .84rem; font-weight: 700; }
         .field-wrap { position: relative; }
         .field-wrap i { position: absolute; left: 16px; top: 50%; z-index: 1; color: #64748b; transform: translateY(-50%); }
-        .field-wrap input { min-height: 50px; padding-left: 46px; border: 1.5px solid #dbe3ef; border-radius: 12px; }
+        .field-wrap input { min-height: 50px; padding-left: 46px; border: 1.5px solid #dbe3ef; border-radius: 12px; font-size: 16px; }
         .field-wrap input:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(37,99,235,.12); }
         .btn-brand { min-height: 50px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 12px 24px rgba(37,99,235,.24); font-weight: 800; }
         .btn-brand:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); transform: translateY(-1px); }
@@ -56,8 +68,16 @@
         .demo-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #1e293b; font-weight: 800; }
         .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 16px; color: #64748b; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .69rem; }
         .demo-grid strong { color: #334155; }
-        @media (max-width: 900px) { .auth-shell { grid-template-columns: 1fr; } .auth-hero { min-height: 360px; padding: 28px 24px; } .hero-content { padding: 42px 0 10px; } .hero-content h1 { font-size: 2.35rem; } .hero-content p { margin-bottom: 22px; font-size: .94rem; } .hero-footer { display: none; } .auth-form-panel { padding: 42px 24px 56px; } }
-        @media (max-width: 520px) { .benefits { gap: 8px; } .benefit { min-height: 94px; padding: 12px; } .benefit i { margin-bottom: 9px; } .benefit span { font-size: .72rem; } .demo-grid { grid-template-columns: 1fr; } }
+        .demo-item { border: 0; background: transparent; text-align: left; padding: 6px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; font: inherit; color: inherit; line-height: 1.5; }
+        .demo-item:hover, .demo-item:focus-visible { background: #eef2ff; outline: 2px solid #c7d2fe; outline-offset: 1px; }
+        .demo-hint { margin-top: 10px; color: #64748b; font-size: .72rem; }
+        .pw-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: #64748b; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; font-size: 1.05rem; }
+        .pw-toggle:hover { background: #f1f5f9; color: #0f172a; }
+        .field-wrap input[type="password"], .field-wrap input[type="text"].pw { padding-right: 48px; }
+        #pwa-install-btn.show { display: inline-flex !important; }
+        @media (max-width: 900px) { .auth-shell { grid-template-columns: 1fr; } .auth-hero { min-height: 0; padding: 28px 24px; padding-top: calc(28px + env(safe-area-inset-top)); } .hero-content { padding: 42px 0 10px; } .hero-content h1 { font-size: 2.35rem; } .hero-content p { margin-bottom: 22px; font-size: .94rem; } .hero-footer { display: none; } .auth-form-panel { padding: 42px 24px 56px; padding-bottom: calc(56px + env(safe-area-inset-bottom)); } }
+        @media (max-width: 520px) { .auth-hero { padding: 22px 18px; } .benefits { gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); } .benefit { min-height: 94px; padding: 12px 10px; } .benefit i { margin-bottom: 9px; } .benefit span { font-size: .68rem; } .demo-grid { grid-template-columns: 1fr; } .auth-form-panel { padding: 32px 18px 48px; } .auth-form h2 { font-size: 1.9rem; } }
+        @media (max-width: 360px) { .benefits { grid-template-columns: 1fr; } .benefit { min-height: 0; display: flex; align-items: center; gap: 10px; } .benefit i { margin-bottom: 0; } }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
     </style>
 </head>
@@ -90,18 +110,47 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="mb-3"><label class="field-label" for="email">Email</label><div class="field-wrap"><i class="bi bi-envelope" aria-hidden="true"></i><input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="nama@rumahsakit.id"></div>@error('email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror</div>
-                    <div class="mb-3"><label class="field-label" for="password">Kata sandi</label><div class="field-wrap"><i class="bi bi-lock" aria-hidden="true"></i><input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required autocomplete="current-password" placeholder="Masukkan kata sandi"></div>@error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror</div>
+                    <div class="mb-3"><label class="field-label" for="password">Kata sandi</label><div class="field-wrap"><i class="bi bi-lock" aria-hidden="true"></i><input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required autocomplete="current-password" placeholder="Masukkan kata sandi"><button type="button" class="pw-toggle" id="pwToggle" aria-label="Tampilkan kata sandi"><i class="bi bi-eye" aria-hidden="true"></i></button></div>@error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror</div>
                     <div class="d-flex align-items-center justify-content-between gap-3 mb-4"><label class="form-check d-flex align-items-center gap-2 m-0 small text-secondary"><input type="checkbox" name="remember" class="form-check-input" value="1"> Ingat saya</label><a class="small text-decoration-none" href="{{ route('home') }}#kontak">Butuh bantuan?</a></div>
                     <button class="btn btn-primary btn-brand w-100" type="submit"><i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Masuk ke Dashboard</button>
                 </form>
 
                 <div class="demo-box" aria-label="Akun demo">
-                    <div class="demo-title"><span aria-hidden="true">🧪</span> Demo Login</div>
-                    <div class="demo-grid">@foreach($demoAccounts as $account)<div><strong>{{ $account['role'] }}:</strong> {{ $account['email'] }} / {{ $account['password'] }}</div>@endforeach</div>
+                    <div class="demo-title"><span aria-hidden="true">🧪</span> Demo Login — klik untuk isi otomatis</div>
+                    <div class="demo-grid">@foreach($demoAccounts as $account)<button type="button" class="demo-item" data-email="{{ $account['email'] }}" data-password="{{ $account['password'] }}"><strong>{{ $account['role'] }}:</strong> {{ $account['email'] }} / {{ $account['password'] }}</button>@endforeach</div>
                     <small class="d-block mt-3 text-secondary">Gunakan hanya untuk demo. Ganti atau hapus password default sebelum production.</small>
+                    <div class="demo-hint">Tips: klik salah satu akun di atas untuk mengisi email &amp; kata sandi otomatis.</div>
                 </div>
             </div>
         </section>
     </main>
+    <button type="button" id="pwa-install-btn" aria-label="Pasang aplikasi" style="position:fixed;bottom:20px;right:20px;z-index:998;display:none;align-items:center;gap:8px;padding:10px 16px;border-radius:50px;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;font-weight:600;font-size:0.84rem;border:none;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,0.35);font-family:inherit;">
+        <i class="bi bi-download" aria-hidden="true"></i> Pasang Aplikasi
+    </button>
+    <script>
+    (function () {
+        // Klik demo untuk autofill
+        document.querySelectorAll('.demo-item').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var email = document.getElementById('email');
+                var pw = document.getElementById('password');
+                if (email) email.value = btn.getAttribute('data-email');
+                if (pw) pw.value = btn.getAttribute('data-password');
+                if (email) email.focus();
+            });
+        });
+        // Toggle lihat password
+        var t = document.getElementById('pwToggle');
+        var p = document.getElementById('password');
+        if (t && p) t.addEventListener('click', function () {
+            var show = p.type === 'password';
+            p.type = show ? 'text' : 'password';
+            p.classList.toggle('pw', show);
+            t.setAttribute('aria-label', show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+            t.innerHTML = show ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>' : '<i class="bi bi-eye" aria-hidden="true"></i>';
+        });
+    })();
+    </script>
+    @include('partials.pwa-register')
 </body>
 </html>

@@ -1,3 +1,14 @@
+<IfModule mod_mime.c>
+    AddType application/manifest+json webmanifest
+    AddType application/javascript js
+</IfModule>
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType text/css "access plus 7 days"
+</IfModule>
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

@@ -2,13 +2,21 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Masuk') - {{ config('app.name', 'Hospital App') }}</title>
-
+    @include('partials.pwa-head')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        input, select, textarea { font-size: 16px; }
+        @media (max-width: 576px) {
+            .container { padding-left: 16px; padding-right: 16px; }
+            .card-body.p-4 { padding: 1.25rem !important; }
+        }
+        #pwa-install-btn.show { display: inline-flex !important; }
+    </style>
     @stack('styles')
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
@@ -51,5 +59,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+    <button type="button" id="pwa-install-btn" aria-label="Pasang aplikasi" style="position:fixed;bottom:20px;right:20px;z-index:998;display:none;align-items:center;gap:8px;padding:10px 16px;border-radius:50px;background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;font-weight:600;font-size:0.84rem;border:none;cursor:pointer;box-shadow:0 8px 20px rgba(37,99,235,0.35);font-family:inherit;">
+        <i class="bi bi-download"></i> Pasang Aplikasi
+    </button>
+    @include('partials.pwa-register')
 </body>
 </html>

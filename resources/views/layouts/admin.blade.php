@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="light" id="htmlRoot">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — {{ config('app.name', 'Hospital') }}</title>
     @include('partials.pwa-head')
@@ -983,6 +983,36 @@
         body.dark .modal-content { background: var(--navy-600); color: var(--text); }
         body.dark .modal-header { border-color: rgba(255,255,255,0.06); }
         body.dark .btn-close { filter: invert(1); }
+
+        /* ── Global responsive patch ── */
+        html { -webkit-text-size-adjust: 100%; }
+        img, video, canvas, svg { max-width: 100%; height: auto; }
+        input, select, textarea { font-size: 16px; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); }
+        .table-responsive table { min-width: 640px; }
+        .card-premium, .kpi-card, .glass-card { min-width: 0; }
+        .row > [class*="col-"] { min-width: 0; }
+        @media (max-width: 991px) {
+            .profile-btn .profile-text { display: none; }
+            .profile-btn { padding: 0 4px; }
+            .top-bar { gap: .5rem; }
+        }
+        @media (max-width: 768px) {
+            .main-content { padding: .9rem .8rem calc(1rem + env(safe-area-inset-bottom)); }
+            .card-premium .card-header-premium { flex-wrap: wrap; gap: .5rem; }
+            .notif-dropdown { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; max-height: 60vh; }
+            .d-flex.flex-wrap, .d-flex.gap-2, .d-flex.gap-3 { flex-wrap: wrap; }
+            .btn-group { flex-wrap: wrap; }
+            .modal-dialog { margin: .5rem; }
+        }
+        @media (max-width: 576px) {
+            .kpi-card .kpi-value { font-size: 1.25rem; }
+            .top-bar-right .quick-action { display: none; }
+            .live-clock { display: none; }
+            .card-premium { border-radius: 12px; }
+            .pagination { flex-wrap: wrap; }
+            h1, h2, h3 { overflow-wrap: break-word; }
+        }
     </style>
     @stack('styles')
 </head>
@@ -1538,10 +1568,10 @@
                 </button>
 
                 {{-- Profile --}}
-                <button class="profile-btn d-none d-md-flex" data-bs-toggle="dropdown">
+                <button class="profile-btn d-flex" data-bs-toggle="dropdown" aria-label="Menu profil">
                     <span class="user-avatar">{{ strtoupper(substr(Auth::user()?->name ?? 'U', 0, 2)) }}</span>
-                    <span style="font-size:0.8rem;font-weight:600;">{{ Auth::user()?->name ?? 'Admin' }}</span>
-                    <i class="bi bi-chevron-down" style="font-size:0.7rem;opacity:0.5;"></i>
+                    <span class="profile-text" style="font-size:0.8rem;font-weight:600;">{{ Auth::user()?->name ?? 'Admin' }}</span>
+                    <i class="bi bi-chevron-down profile-text" style="font-size:0.7rem;opacity:0.5;"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text small" style="color:var(--text-muted);">{{ Auth::user()?->email ?? '' }}</span></li>
