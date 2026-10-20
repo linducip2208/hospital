@@ -3,7 +3,7 @@
 // Strategy: cache-first untuk static assets, network-first untuk page/API
 // ─────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'simrs-v1.0.1';
+const CACHE_VERSION = 'simrs-v1.0.2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 

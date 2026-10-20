@@ -50,6 +50,15 @@
     }
 
     function promptUpdate(worker) {
+        // Tampilkan prompt maksimal 1x per sesi agar tidak loop ("selalu begini")
+        try {
+            if (sessionStorage.getItem('pwa-update-prompted') === '1') {
+                // Sesi ini sudah ditanya: aktifkan diam-diam tanpa prompt
+                worker.postMessage({ type: 'SKIP_WAITING' });
+                return;
+            }
+            sessionStorage.setItem('pwa-update-prompted', '1');
+        } catch (e) {}
         if (confirm('Versi baru aplikasi tersedia. Refresh sekarang?')) {
             worker.postMessage({ type: 'SKIP_WAITING' });
             var reloaded = false;
@@ -58,7 +67,10 @@
                 reloaded = true;
                 location.reload();
             });
-            setTimeout(function () { location.reload(); }, 2500);
+            // Fallback reload hanya jika controller tidak berganti (c egah reload ganda/loop)
+            setTimeout(function () {
+                if (! reloaded && ! navigator.serviceWorker.controller) location.reload();
+            }, 2500);
         }
     }
 
