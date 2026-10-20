@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\PatientSelfController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PublicApiController;
 use App\Http\Controllers\Api\SatuSehatWebhookController;
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\Api\TreatmentController;
@@ -26,6 +27,16 @@ Route::post('/auth/patients/tokens', [TokenController::class, 'storePatient'])
     ->middleware('throttle:10,1')->name('api.patients.tokens.store');
 Route::post('/auth/patients/register', [TokenController::class, 'registerPatient'])
     ->middleware('throttle:10,1')->name('api.patients.register');
+
+// Endpoint PUBLIK tanpa auth (throttle ketat, data disaring)
+Route::prefix('v1/public')->name('api.public.')->group(function () {
+    Route::get('polyclinics', [PublicApiController::class, 'polyclinics'])->middleware('throttle:30,1');
+    Route::get('doctors', [PublicApiController::class, 'doctors'])->middleware('throttle:30,1');
+    Route::get('queue-status', [PublicApiController::class, 'queueStatus'])->middleware('throttle:30,1');
+    Route::post('appointments', [PublicApiController::class, 'bookAppointment'])->middleware('throttle:5,1');
+    Route::post('ambulance-calls', [PublicApiController::class, 'ambulanceCall'])->middleware('throttle:5,1');
+    Route::post('patient-feedbacks', [PublicApiController::class, 'feedback'])->middleware('throttle:5,1');
+});
 
 Route::prefix('v1')->middleware(['api.auth', 'throttle:api'])->name('api.')->group(function () {
     Route::apiResource('patients', PatientController::class);

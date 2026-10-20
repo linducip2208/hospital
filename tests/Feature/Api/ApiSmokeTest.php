@@ -68,6 +68,15 @@ class ApiSmokeTest extends TestCase
             if (str_contains($uri, '{')) {
                 continue; // diuji terpisah dengan ID
             }
+            if (str_contains($uri, 'public/queue-status')) {
+                $poli = \App\Models\Polyclinic::create(['name' => 'Poli Smoke', 'code' => 'PS-01']);
+                $checked++;
+                $res = $this->staff()->getJson('/api/v1/public/queue-status?polyclinic_id=' . $poli->id);
+                if ($res->status() !== 200) {
+                    $failures[] = "GET /api/v1/public/queue-status => {$res->status()}";
+                }
+                continue;
+            }
             $checked++;
             $res = $this->staff()->getJson('/' . $uri);
             if (! in_array($res->status(), [200, 403], true)) {
