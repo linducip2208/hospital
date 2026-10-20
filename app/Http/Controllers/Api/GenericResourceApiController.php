@@ -58,8 +58,9 @@ class GenericResourceApiController extends Controller
         }
 
         $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
+        $orderCol = Schema::hasColumn($model->getTable(), 'created_at') ? 'created_at' : $model->getKeyName();
 
-        return response()->json($query->latest()->paginate($perPage));
+        return response()->json($query->orderByDesc($orderCol)->paginate($perPage));
     }
 
     public function store(Request $request, string $resource): JsonResponse
@@ -68,12 +69,16 @@ class GenericResourceApiController extends Controller
         $config = $this->resolve($resource);
         $model = $this->model($config);
 
-        $record = $model->newQuery()->create($request->validate($this->rules($model, false)));
+        try {
+            $record = $model->newQuery()->create($request->validate($this->rules($model, false)));
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json(['message' => 'Data tidak dapat disimpan. Periksa field wajib tabel ini.', 'error' => $e->getMessage()], 422);
+        }
 
         return response()->json($record->fresh(), 201);
     }
 
-    public function show(Request $request, string $resource, int $id): JsonResponse
+    public function show(Request $request, string $resource, string $id): JsonResponse
     {
         abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
@@ -82,25 +87,29 @@ class GenericResourceApiController extends Controller
             $query->with($config['with']);
         }
 
-        return response()->json($query->findOrFail($id));
+        return response()->json($query->findOrFail((int) $id));
     }
 
-    public function update(Request $request, string $resource, int $id): JsonResponse
+    public function update(Request $request, string $resource, string $id): JsonResponse
     {
         abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
         $model = $this->model($config);
-        $record = $model->newQuery()->findOrFail($id);
-        $record->update($request->validate($this->rules($model, true)));
+        $record = $model->newQuery()->findOrFail((int) $id);
+        try {
+            $record->update($request->validate($this->rules($model, true)));
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json(['message' => 'Data tidak dapat diubah. Periksa field tabel ini.', 'error' => $e->getMessage()], 422);
+        }
 
         return response()->json($record->fresh());
     }
 
-    public function destroy(Request $request, string $resource, int $id): JsonResponse
+    public function destroy(Request $request, string $resource, string $id): JsonResponse
     {
         abort_unless($request->user(), 403, 'Hanya token staf.');
         $config = $this->resolve($resource);
-        $this->model($config)->newQuery()->findOrFail($id)->delete();
+        $this->model($config)->newQuery()->findOrFail((int) $id)->delete();
 
         return response()->json(null, 204);
     }

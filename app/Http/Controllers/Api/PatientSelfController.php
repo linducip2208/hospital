@@ -14,7 +14,10 @@ class PatientSelfController extends Controller
 {
     private function patient(): \App\Models\Patient
     {
-        return Auth::guard('patient')->user();
+        $patient = Auth::guard('patient')->user();
+        abort_unless($patient, 403, 'Hanya token pasien.');
+
+        return $patient;
     }
 
     public function me(): JsonResponse
