@@ -52,8 +52,10 @@ class SatuSehatClient
         $this->baseUrl = rtrim($base, '/');
 
         // Auth host boleh beda dari FHIR host (seperti "BASE URL AUTH" di referensi).
+        // Toleran terhadap URL lengkap ala aplikasi Windows (dengan path + query),
+        // mis. https://host/oauth2/v1/accesstoken?grant_type=client_credentials
         $authBase = trim((string) ($settings[$prefix . 'auth_base_url'] ?? ''));
-        $this->authBaseUrl = $authBase !== '' ? rtrim($authBase, '/') : $this->baseUrl;
+        $this->authBaseUrl = $this->normalizeHostRoot($authBase !== '' ? $authBase : $this->baseUrl);
 
         // Kredensial: kunci per-env (baru) didahulukan, kunci lama sebagai fallback.
         $this->clientId = $this->decryptSetting($settings[$prefix . 'client_id'] ?? $settings['satusehat_client_id'] ?? null);
@@ -164,7 +166,7 @@ class SatuSehatClient
             $response = Http::timeout(15)
                 ->withHeaders(['Content-Type' => 'application/x-www-form-urlencoded'])
                 ->asForm()
-                ->post($this->authBaseUrl . '/oauth2/v1/accesstoken', [
+                ->post($this->getTokenUrl(), [
                     'client_id' => $this->clientId,
                     'client_secret' => $this->clientSecret,
                     'grant_type' => 'client_credentials',
@@ -335,7 +337,38 @@ class SatuSehatClient
     {
         $path = ltrim($path, '/');
 
-        return $this->baseUrl . '/fhir-r4/v1/' . $path;
+        // Toleran bila Base URL sudah berisi path /fhir-r4/v1 (format aplikasi Windows).
+        $prefix = str_contains($this->baseUrl ?? '', '/fhir-r4/v1')
+            ? rtrim($this->baseUrl, '/')
+            : ($this->baseUrl ?? '') . '/fhir-r4/v1';
+
+        return $prefix . '/' . $path;
+    }
+
+    public function getTokenUrl(): string
+    {
+        return ($this->authBaseUrl ?? '') . '/oauth2/v1/accesstoken';
+    }
+
+    /**
+     * Ambil host root dari URL apa pun (buang path/query/fragment),
+     * agar paste URL lengkap tetap menghasilkan endpoint yang benar.
+     */
+    private function normalizeHostRoot(string $url): string
+    {
+        $url = trim($url);
+        foreach (['?', '#'] as $sep) {
+            $pos = strpos($url, $sep);
+            if ($pos !== false) {
+                $url = substr($url, 0, $pos);
+            }
+        }
+        $url = rtrim($url, '/');
+        if (preg_match('#^(https?://[^/]+)#i', $url, $m)) {
+            return $m[1];
+        }
+
+        return $url;
     }
 
     public function testWebhook(): array

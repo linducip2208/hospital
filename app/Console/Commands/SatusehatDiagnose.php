@@ -46,6 +46,7 @@ class SatusehatDiagnose extends Command
 
         $client = new \App\Services\SatuSehatClient;
         $client->clearToken();
+        $this->line('token URL  : ' . $client->getTokenUrl());
         $result = $client->testConnection();
         if ($result['ok']) {
             $this->info('OK: ' . ($result['message'] ?? 'terhubung'));
