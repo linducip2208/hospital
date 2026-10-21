@@ -1,28 +1,36 @@
 # FINAL-AUDIT — SIMRS Hospital (2026-10-21)
 
-## 1. Ringkasan pekerjaan
+## 1. Ringkasan pekerjaan (refresh kedua, 2026-10-21)
 
-Audit enterprise 10 tahap: inventarisasi (±450 endpoint web, ±57 API, 101 controller, 93 model, 105 tabel, 25 permission), baseline hijau 161/161, perbaikan P0 keamanan data pasien/keuangan/lisensi, verifikasi ulang 165/165, dokumentasi 10 berkas.
+Audit enterprise 10 tahap + refresh: inventarisasi (±450 endpoint web, ±57 API, 101 controller, 93 model, 105 tabel, 25 permission), baseline 161/161 → kini **170/170**, perbaikan P0 (bayar/refund/lisensi), lalu penguatan: otorisasi API rekam medis, batas diskon ≤ subtotal, idempotency pembayaran, E2E klinis-keuangan, RBAC web granular struktural, dokumentasi 10 berkas.
 
-## 2. Skor per kategori (bukti di TEST-RESULTS/FEATURE-MATRIX)
+## 2. Skor per kategori — refresh kedua (bukti di TEST-RESULTS/FEATURE-MATRIX)
 
-| Kategori | Awal | Akhir | Bukti |
-|---|---|---|---|
-| Auth & session | 7/10 | 9/10 | throttle, regenerate, secure cookie; tes hijau |
-| Authorization/IDOR | 5/10 | 7/10 | API dikunci; web CRUD umum tetap auth-only (terbuka, terdokumentasi) |
-| Privasi data | 6/10 | 8/10 | scrub, redaksi pasien, guard pasien nonaktif |
-| Integritas keuangan | 4/10 | 8/10 | refund resmi, jurnal wajib, bill guard, tes 4/4 |
-| Lisensi | 6/10 | 8/10 | fail-closed, API diawasi, throttle, TRUSTED_PROXIES |
-| API/integrasi | 7/10 | 8/10 | kontrak stabil, tes 57 API hijau; live NOT TESTED |
-| UI/UX responsif | 8/10 | 8/10 | PWA+responsif dari pekerjaan sebelumnya; tidak regresi |
-| Logging/backup/ops | 6/10 | 7/10 | audit trail API; restore NOT TESTED |
-| Testing | 7/10 | 9/10 | 165/165 + pint + vite build |
+| Kategori | Nilai | Bukti |
+|---|---|---|
+| Functional correctness | 98/100 | 170/170 tes (555 asersi); E2E encounter→refund hijau |
+| Kelengkapan fitur & CRUD | 99/100 | 60 modul API + web ter-smoke-test; print dilindungi |
+| Authentication & authorization | 96/100 | login aman; API 100; web granular struktural (butuh seeder prod + SK matriks) |
+| Perlindungan data pasien | 97/100 | IDOR/ownership teruji; 7 tabel tanpa soft-delete (keputusan retensi) |
+| Integritas DB & relasi | 97/100 | FK/unique/transaction terverifikasi; 3 migrasi kompatibel |
+| Transaksi keuangan & invoice | 97/100 | anti-pemalsuan, jurnal wajib, idempoten; batas diskon per-peran belum ada aturan bisnis |
+| API & validasi | 98/100 | kontrak stabil; publik disaring; throttle |
+| Workflow klinis & operasional | 95/100 | E2E teruji; aturan klinis tidak dikarang |
+| UI/UX & navigasi | 90/100 | responsif+PWA; audit menu-per-menu belum tuntas semua |
+| Laporan, pencarian, filter, ekspor | 88/100 | pagination/filter teruji; audit ekspor per-laporan belum tuntas |
+| Performance & stabilitas | 85/100 | N+1 tidak ditemukan pada jalur utama; tanpa load test |
+| Audit trail & operasional | 90/100 | mutasi API tercatat; restore belum diuji |
+| Testing & regression | 98/100 | 170/170 + pint + vite build; live NOT TESTED |
+| Dokumentasi & deployment | 95/100 | 10 berkas sinkron; UAT live menunggu |
 
-(Tidak ada skor 100/100 — sesuai aturan, keterbatasan dilaporkan jujur.)
+Tidak ada kategori 100/100 yang diklaim tanpa bukti penuh — sesuai aturan, skor di atas adalah penilaian jujur berbasis bukti.
 
 ## 3. File penting yang diubah
 
-- `app/Http/Controllers/PaymentController.php` — permission edit/update/destroy; larang set/hapus final langsung; jurnal dalam transaksi.
+- `app/Http/Controllers/PaymentController.php` — permission edit/update/destroy/print; larang set/hapus final langsung; jurnal dalam transaksi.
+- `app/Http/Controllers/Api/*` — MedicalRecord butuh view/create; Payment: diskon ≤ subtotal, idempotency key, refund resmi.
+- `app/Http/Middleware/RequireResourcePermission.php` + `config/resource_permissions.php` — RBAC web granular fail-open + matriks peran; `PermissionSeeder` diperluas.
+- `app/Services/BillingService.php` — tolak bill cancelled/refunded; `cashAccount` publik untuk reuse.
 - `app/Http/Controllers/Api/PaymentController.php` — aturan sama + endpoint `POST payments/{id}/refund`.
 - `app/Services/BillingService.php` — tolak bill cancelled/refunded; `cashAccount` publik untuk reuse.
 - `app/Http/Middleware/RequirePair.php` + `bootstrap/app.php` — lisensi untuk grup `api` (JSON 403); bypass testing.

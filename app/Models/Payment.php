@@ -14,6 +14,7 @@ class Payment extends Model
 
     protected $fillable = [
         'patient_id', 'appointment_id', 'medical_record_id', 'encounter_id', 'department_id', 'payer_type', 'service_class', 'invoice_number',
+        'idempotency_key',
         'subtotal', 'discount', 'tax', 'amount',
         'paid_amount', 'change_amount', 'payment_method', 'status', 'notes',
     ];
@@ -45,7 +46,18 @@ class Payment extends Model
         return $this->belongsTo(MedicalRecord::class);
     }
 
-    public function encounter(): BelongsTo { return $this->belongsTo(Encounter::class); }
-    public function allocations(): HasMany { return $this->hasMany(PaymentAllocation::class); }
-    public function refunds(): HasMany { return $this->hasMany(Refund::class); }
+    public function encounter(): BelongsTo
+    {
+        return $this->belongsTo(Encounter::class);
+    }
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
+    }
 }

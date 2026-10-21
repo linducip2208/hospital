@@ -3,28 +3,27 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\AdmissionController;
 use App\Http\Controllers\AmbulanceCallController;
 use App\Http\Controllers\AmbulanceController;
-use App\Http\Controllers\AdmissionController;
 use App\Http\Controllers\AncRecordController;
 use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\ClinicalOrderController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BabyImmunizationController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BloodDonationController;
-use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChartOfAccountController;
+use App\Http\Controllers\ClinicalOrderController;
 use App\Http\Controllers\ClinicalPathwayController;
 use App\Http\Controllers\ClinicalToolController;
 use App\Http\Controllers\CodeBlueActivationController;
 use App\Http\Controllers\CostEstimateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\DietOrderController;
 use App\Http\Controllers\DischargeSummaryController;
 use App\Http\Controllers\DoctorController;
@@ -33,10 +32,11 @@ use App\Http\Controllers\DrugDestructionController;
 use App\Http\Controllers\DrugSupplyOrderController;
 use App\Http\Controllers\EmergencyController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\EquipmentCalibrationController;
 use App\Http\Controllers\EquipmentMaintenanceController;
-use App\Http\Controllers\HospitalBedController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HospitalBedController;
 use App\Http\Controllers\IcuMonitoringController;
 use App\Http\Controllers\InfectionSurveillanceController;
 use App\Http\Controllers\InformedConsentController;
@@ -49,14 +49,13 @@ use App\Http\Controllers\MedicalCertificateController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\MedicalWasteController;
 use App\Http\Controllers\MedicationAdministrationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NurseAssignmentController;
 use App\Http\Controllers\NursingCareController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OdontogramController;
 use App\Http\Controllers\PageContentController;
 use App\Http\Controllers\PartographController;
 use App\Http\Controllers\PatientController;
-use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\PatientFeedbackController;
 use App\Http\Controllers\PatientSafetyIncidentController;
 use App\Http\Controllers\PatientScreeningController;
@@ -65,6 +64,7 @@ use App\Http\Controllers\PolyclinicController;
 use App\Http\Controllers\PostnatalRecordController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\ProgrammaticSeoController;
+use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\RadiologyController;
@@ -143,7 +143,7 @@ Route::get('register', [RegisterController::class, 'showRegistrationForm'])->nam
 Route::post('register', [RegisterController::class, 'register']);
 
 // Authenticated routes
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'resource.permission'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

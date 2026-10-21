@@ -153,6 +153,7 @@ class PaymentController extends Controller
 
     public function printReceipt(Payment $payment): View
     {
+        $this->ensurePermission('billing.view');
         $payment->load(['appointment.patient', 'appointment.doctor']);
 
         return view('payments.print-receipt', compact('payment'));
@@ -160,6 +161,7 @@ class PaymentController extends Controller
 
     public function printBill(Payment $payment): View
     {
+        $this->ensurePermission('billing.view');
         $payment->load(['appointment.patient', 'appointment.doctor']);
 
         return view('payments.print-bill', compact('payment'));

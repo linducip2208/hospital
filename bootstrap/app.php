@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckPoliAccess;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\RequirePair;
+use App\Http\Middleware\RequireResourcePermission;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'api.auth' => AuthenticateApi::class,
+            'resource.permission' => RequireResourcePermission::class,
             'role' => CheckRole::class,
             'poli.access' => CheckPoliAccess::class,
             'permission' => CheckPermission::class,

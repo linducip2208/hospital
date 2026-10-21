@@ -11,6 +11,7 @@ class MedicalRecordController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('medical_records.view'), 403);
         $query = MedicalRecord::with([
             'patient:id,name,nik',
             'doctor:id,name,specialization',
@@ -32,6 +33,7 @@ class MedicalRecordController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('medical_records.create'), 403);
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'doctor_id' => 'required|exists:doctors,id',
@@ -50,8 +52,9 @@ class MedicalRecordController extends Controller
         return response()->json($record, 201);
     }
 
-    public function show(MedicalRecord $medicalRecord): JsonResponse
+    public function show(Request $request, MedicalRecord $medicalRecord): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('medical_records.view'), 403);
         $medicalRecord->load(['patient', 'doctor', 'appointment']);
 
         return response()->json($medicalRecord);
@@ -59,6 +62,7 @@ class MedicalRecordController extends Controller
 
     public function update(Request $request, MedicalRecord $medicalRecord): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('medical_records.create'), 403);
         $validated = $request->validate([
             'patient_id' => 'sometimes|exists:patients,id',
             'doctor_id' => 'sometimes|exists:doctors,id',

@@ -20,7 +20,9 @@ class PermissionSeeder extends Seeder
             'accounting.view' => 'Lihat akuntansi', 'accounting.post' => 'Posting jurnal', 'reports.export' => 'Export laporan', 'audit_logs.view' => 'Lihat audit trail',
             'users.manage' => 'Kelola pengguna', 'settings.manage' => 'Kelola pengaturan',
         ];
-        foreach ($items as $name => $label) Permission::updateOrCreate(['name' => $name], ['label' => $label]);
+        foreach ($items as $name => $label) {
+            Permission::updateOrCreate(['name' => $name], ['label' => $label]);
+        }
         $all = Permission::pluck('id', 'name');
         $roles = [
             'director' => ['patients.view', 'medical_records.view', 'billing.view', 'accounting.view', 'reports.export', 'audit_logs.view'],
@@ -32,7 +34,35 @@ class PermissionSeeder extends Seeder
             'finance' => ['billing.view', 'accounting.view', 'accounting.post', 'reports.export'],
             'staff' => ['patients.view', 'patients.create', 'patients.update', 'appointments.manage'],
         ];
-        foreach ($roles as $role => $permissions) foreach ($permissions as $name) if (isset($all[$name])) DB::table('role_permissions')->updateOrInsert(['role' => $role, 'permission_id' => $all[$name]], ['created_at' => now(), 'updated_at' => now()]);
+        foreach ($roles as $role => $permissions) {
+            foreach ($permissions as $name) {
+                if (isset($all[$name])) {
+                    DB::table('role_permissions')->updateOrInsert(['role' => $role, 'permission_id' => $all[$name]], ['created_at' => now(), 'updated_at' => now()]);
+                }
+            }
+        }
         $this->command?->info('RBAC permissions berhasil di-seed untuk '.count($roles).' role.');
+
+        // Granular resource permissions (config/resource_permissions.php — satu sumber kebenaran).
+        // Aman dijalankan ulang: updateOrCreate + updateOrInsert. roles null = pertahankan hibah lama.
+        foreach ((array) config('resource_permissions', []) as $slug => $map) {
+            foreach (['view', 'manage'] as $kind) {
+                $perm = $map[$kind] ?? null;
+                if (! is_string($perm) || $perm === '') {
+                    continue;
+                }
+                $permission = Permission::updateOrCreate(['name' => $perm], ['label' => ucfirst($slug).' '.($kind === 'view' ? 'lihat' : 'kelola')]);
+                $grantRoles = $map[$kind.'_roles'] ?? null;
+                if (is_array($grantRoles)) {
+                    foreach ($grantRoles as $role) {
+                        DB::table('role_permissions')->updateOrInsert(
+                            ['role' => $role, 'permission_id' => $permission->id],
+                            ['created_at' => now(), 'updated_at' => now()]
+                        );
+                    }
+                }
+            }
+        }
+        $this->command?->info('Resource permissions granular berhasil di-seed.');
     }
 }

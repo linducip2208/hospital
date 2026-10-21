@@ -54,12 +54,13 @@ class PaymentController extends Controller
             'appointment_id' => 'nullable|exists:appointments,id',
             'bill_id' => 'nullable|exists:bills,id',
             'subtotal' => 'required|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0|lte:subtotal',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
             'status' => 'nullable|in:pending,completed',
             'notes' => 'nullable|string',
+            'idempotency_key' => 'nullable|string|max:64',
         ]);
 
         if (! empty($validated['bill_id'])) {
@@ -70,6 +71,15 @@ class PaymentController extends Controller
             ]);
 
             return response()->json($payment->load(['patient:id,name', 'appointment:id,appointment_date']), 201);
+        }
+
+        if (! empty($validated['idempotency_key'])) {
+            $existing = Payment::where('idempotency_key', $validated['idempotency_key'])->first();
+            if ($existing) {
+                $existing->load(['patient:id,name', 'appointment:id,appointment_date']);
+
+                return response()->json(array_merge($existing->toArray(), ['replayed' => true]));
+            }
         }
 
         if (in_array($validated['status'] ?? 'pending', ['cancelled', 'refunded'], true)) {
@@ -130,6 +140,12 @@ class PaymentController extends Controller
             'status' => 'nullable|in:pending,completed',
             'notes' => 'nullable|string',
         ]);
+
+        $effSubtotal = $validated['subtotal'] ?? $payment->subtotal;
+        $effDiscount = array_key_exists('discount', $validated) ? $validated['discount'] : $payment->discount;
+        if ($effDiscount !== null && $effDiscount > $effSubtotal) {
+            return response()->json(['message' => 'Diskon tidak boleh melebihi subtotal.'], 422);
+        }
 
         if (isset($validated['subtotal']) || array_key_exists('discount', $validated) || array_key_exists('tax', $validated) || isset($validated['paid_amount'])) {
             $subtotal = $validated['subtotal'] ?? $payment->subtotal;
