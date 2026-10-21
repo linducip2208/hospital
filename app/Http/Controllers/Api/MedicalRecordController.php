@@ -53,6 +53,7 @@ class MedicalRecordController extends Controller
     public function show(MedicalRecord $medicalRecord): JsonResponse
     {
         $medicalRecord->load(['patient', 'doctor', 'appointment']);
+
         return response()->json($medicalRecord);
     }
 
@@ -79,6 +80,7 @@ class MedicalRecordController extends Controller
     {
         abort_unless($request->user()?->hasPermission('medical_records.sign'), 403);
         $medicalRecord->delete();
+
         return response()->json(null, 204);
     }
 }

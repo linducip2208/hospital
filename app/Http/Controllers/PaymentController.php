@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Bill;
 use App\Models\Payment;
 use App\Services\BillingService;
 use App\Services\DocumentNumberService;
+use App\Services\JournalService;
 use App\Services\RefundService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
@@ -21,9 +25,10 @@ class PaymentController extends Controller
             $query->where('status', $status);
         }
         if ($search = $request->get('search')) {
-            $query->whereHas('appointment.patient', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->whereHas('appointment.patient', fn ($q) => $q->where('name', 'like', "%{$search}%"));
         }
         $payments = $query->latest()->paginate(15);
+
         return view('payments.index', compact('payments'));
     }
 
@@ -36,6 +41,7 @@ class PaymentController extends Controller
             ->orderBy('appointment_date', 'desc')
             ->limit(500)
             ->get();
+
         return view('payments.create', compact('appointments'));
     }
 
@@ -54,7 +60,8 @@ class PaymentController extends Controller
         $appointment = Appointment::findOrFail($validated['appointment_id']);
 
         if (! empty($validated['bill_id'])) {
-            $billing->receivePayment(\App\Models\Bill::findOrFail($validated['bill_id']), $validated);
+            $billing->receivePayment(Bill::findOrFail($validated['bill_id']), $validated);
+
             return redirect()->route('payments.index')->with('success', 'Pembayaran dialokasikan ke tagihan.');
         }
 
@@ -66,18 +73,18 @@ class PaymentController extends Controller
         $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
         $validated['change_amount'] = 0;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $billing) {
+        DB::transaction(function () use ($validated, $billing) {
             $payment = Payment::create($validated);
             // Pembayaran tunai langsung tetap dijurnal agar laporan keuangan konsisten.
             // Best-effort: pembayaran tetap tercatat bila COA belum tersedia.
             if ((float) $payment->paid_amount > 0) {
                 try {
-                    app(\App\Services\JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran ' . $payment->invoice_number, [
+                    app(JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran '.$payment->invoice_number, [
                         ['account_code' => $billing->cashAccount($payment->payment_method ?? 'cash'), 'debit' => (float) $payment->paid_amount],
                         ['account_code' => ['1200', '1-002'], 'credit' => (float) $payment->paid_amount],
                     ], $payment->invoice_number);
                 } catch (\RuntimeException $e) {
-                    \Illuminate\Support\Facades\Log::warning('Jurnal pembayaran legacy dilewati: ' . $e->getMessage(), ['payment_id' => $payment->id]);
+                    Log::warning('Jurnal pembayaran legacy dilewati: '.$e->getMessage(), ['payment_id' => $payment->id]);
                 }
             }
         });
@@ -89,6 +96,7 @@ class PaymentController extends Controller
     {
         $this->ensurePermission('billing.view');
         $payment->load(['appointment.patient', 'appointment.doctor', 'appointment.treatment']);
+
         return view('payments.show', compact('payment'));
     }
 
@@ -96,6 +104,7 @@ class PaymentController extends Controller
     {
         $this->ensurePermission('billing.manage');
         $appointments = Appointment::with('patient')->orderBy('appointment_date', 'desc')->limit(500)->get();
+
         return view('payments.edit', compact('payment', 'appointments'));
     }
 
@@ -114,7 +123,7 @@ class PaymentController extends Controller
 
         // Pembayaran final tidak boleh diubah langsung (anti pemalsuan status).
         if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
-            return redirect()->route('payments.index')->with('error', 'Pembayaran ' . $payment->status . ' tidak boleh diubah langsung. Gunakan fitur refund resmi.');
+            return redirect()->route('payments.index')->with('error', 'Pembayaran '.$payment->status.' tidak boleh diubah langsung. Gunakan fitur refund resmi.');
         }
 
         $validated['patient_id'] = $appointment->patient_id;
@@ -125,6 +134,7 @@ class PaymentController extends Controller
         $validated['change_amount'] = 0;
 
         $payment->update($validated);
+
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil diperbarui.');
     }
 
@@ -134,21 +144,24 @@ class PaymentController extends Controller
         // Transaksi yang sudah lunas/dibatalkan/direfund tidak boleh dihapus —
         // koreksi wajib lewat fitur refund resmi yang berjurnal.
         if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
-            return redirect()->route('payments.index')->with('error', 'Pembayaran ' . $payment->status . ' tidak boleh dihapus. Gunakan fitur refund resmi.');
+            return redirect()->route('payments.index')->with('error', 'Pembayaran '.$payment->status.' tidak boleh dihapus. Gunakan fitur refund resmi.');
         }
         $payment->delete();
+
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dihapus.');
     }
 
     public function printReceipt(Payment $payment): View
     {
         $payment->load(['appointment.patient', 'appointment.doctor']);
+
         return view('payments.print-receipt', compact('payment'));
     }
 
     public function printBill(Payment $payment): View
     {
         $payment->load(['appointment.patient', 'appointment.doctor']);
+
         return view('payments.print-bill', compact('payment'));
     }
 
@@ -157,7 +170,7 @@ class PaymentController extends Controller
         $this->ensurePermission('payments.refund');
         $data = $request->validate(['amount' => 'required|numeric|min:0.01', 'reason' => 'required|string|max:1000']);
         $service->process($payment, (float) $data['amount'], $data['reason']);
+
         return back()->with('success', 'Refund diproses dan jurnal pembalik dibuat.');
     }
-
 }

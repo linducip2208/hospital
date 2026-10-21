@@ -3,8 +3,10 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Patient;
+use App\Models\Polyclinic;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -18,12 +20,13 @@ class ApiSmokeTest extends TestCase
     use RefreshDatabase;
 
     private string $staffToken;
+
     private string $patientToken;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $this->withoutMiddleware(ThrottleRequests::class);
 
         $user = User::factory()->create(['role' => 'admin', 'password' => Hash::make('secret-pass')]);
         $res = $this->postJson('/api/auth/tokens', [
@@ -42,14 +45,14 @@ class ApiSmokeTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->withHeader('Authorization', 'Bearer ' . $this->staffToken);
+        return $this->withHeader('Authorization', 'Bearer '.$this->staffToken);
     }
 
     private function patient()
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->withHeader('Authorization', 'Bearer ' . $this->patientToken);
+        return $this->withHeader('Authorization', 'Bearer '.$this->patientToken);
     }
 
     public function test_semua_route_api_terdaftar_dan_bisa_diakses(): void
@@ -69,16 +72,17 @@ class ApiSmokeTest extends TestCase
                 continue; // diuji terpisah dengan ID
             }
             if (str_contains($uri, 'public/queue-status')) {
-                $poli = \App\Models\Polyclinic::create(['name' => 'Poli Smoke', 'code' => 'PS-01']);
+                $poli = Polyclinic::create(['name' => 'Poli Smoke', 'code' => 'PS-01']);
                 $checked++;
-                $res = $this->staff()->getJson('/api/v1/public/queue-status?polyclinic_id=' . $poli->id);
+                $res = $this->staff()->getJson('/api/v1/public/queue-status?polyclinic_id='.$poli->id);
                 if ($res->status() !== 200) {
                     $failures[] = "GET /api/v1/public/queue-status => {$res->status()}";
                 }
+
                 continue;
             }
             $checked++;
-            $res = $this->staff()->getJson('/' . $uri);
+            $res = $this->staff()->getJson('/'.$uri);
             if (! in_array($res->status(), [200, 403], true)) {
                 $failures[] = "GET /{$uri} => {$res->status()}";
             }
@@ -87,7 +91,7 @@ class ApiSmokeTest extends TestCase
         // Endpoint mandiri pasien
         foreach (['api/v1/me', 'api/v1/me/appointments', 'api/v1/me/medical-records', 'api/v1/me/invoices'] as $uri) {
             $checked++;
-            $res = $this->patient()->getJson('/' . $uri);
+            $res = $this->patient()->getJson('/'.$uri);
             if ($res->status() !== 200) {
                 $failures[] = "GET /{$uri} (pasien) => {$res->status()}";
             }
@@ -96,7 +100,7 @@ class ApiSmokeTest extends TestCase
         // Endpoint generik: index 200 + show ID-acak 404
         foreach (array_keys(config('api_resources', [])) as $slug) {
             $checked++;
-            $res = $this->staff()->getJson('/api/v1/' . $slug);
+            $res = $this->staff()->getJson('/api/v1/'.$slug);
             if (! in_array($res->status(), [200, 403], true)) {
                 $failures[] = "GET /api/v1/{$slug} => {$res->status()}";
             }
@@ -107,7 +111,7 @@ class ApiSmokeTest extends TestCase
             }
         }
 
-        $this->assertSame([], $failures, "Endpoint bermasalah:\n" . implode("\n", $failures));
+        $this->assertSame([], $failures, "Endpoint bermasalah:\n".implode("\n", $failures));
         $this->assertGreaterThan(50, $checked, 'Terlalu sedikit endpoint terperiksa.');
     }
 

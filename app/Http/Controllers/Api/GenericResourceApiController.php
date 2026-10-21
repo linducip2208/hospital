@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +20,7 @@ class GenericResourceApiController extends Controller
 {
     private function resolve(string $resource): array
     {
-        $config = config('api_resources.' . $resource);
+        $config = config('api_resources.'.$resource);
         abort_unless($config && class_exists($config['model']), 404, 'Resource tidak dikenal.');
 
         return $config;
@@ -73,10 +75,10 @@ class GenericResourceApiController extends Controller
 
         try {
             $record = $model->newQuery()->create($request->validate($this->rules($model, false)));
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return response()->json(['message' => 'Data tidak dapat disimpan. Periksa field wajib tabel ini.', 'error' => $e->getMessage()], 422);
         }
-        \App\Services\ActivityLogger::log('created', $record, null, ['via' => 'api', 'resource' => $resource]);
+        ActivityLogger::log('created', $record, null, ['via' => 'api', 'resource' => $resource]);
 
         return response()->json($this->scrub($record->fresh()->toArray()), 201);
     }
@@ -101,10 +103,10 @@ class GenericResourceApiController extends Controller
         $record = $model->newQuery()->findOrFail((int) $id);
         try {
             $record->update($request->validate($this->rules($model, true)));
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return response()->json(['message' => 'Data tidak dapat diubah. Periksa field tabel ini.', 'error' => $e->getMessage()], 422);
         }
-        \App\Services\ActivityLogger::log('updated', $record, null, ['via' => 'api', 'resource' => $resource]);
+        ActivityLogger::log('updated', $record, null, ['via' => 'api', 'resource' => $resource]);
 
         return response()->json($this->scrub($record->fresh()->toArray()));
     }
@@ -115,7 +117,7 @@ class GenericResourceApiController extends Controller
         $this->authorizeResource($request, $config, 'delete');
         $record = $this->model($config)->newQuery()->findOrFail((int) $id);
         $record->delete();
-        \App\Services\ActivityLogger::log('deleted', $record, null, ['via' => 'api', 'resource' => $resource]);
+        ActivityLogger::log('deleted', $record, null, ['via' => 'api', 'resource' => $resource]);
 
         return response()->json(null, 204);
     }
@@ -183,22 +185,22 @@ class GenericResourceApiController extends Controller
         $raw = strtolower($col['type'] ?? '');
 
         if (($col['name'] ?? '') === 'password') {
-            return $req . '|string|min:6|max:255';
+            return $req.'|string|min:6|max:255';
         }
         if (($col['name'] ?? '') === 'email') {
-            return $req . $nullable . '|email|max:255';
+            return $req.$nullable.'|email|max:255';
         }
 
         return match (true) {
-            $type === 'boolean' || $raw === 'tinyint(1)' => $req . $nullable . '|boolean',
-            in_array($type, ['integer', 'bigint', 'mediumint', 'smallint', 'tinyint'], true) => $req . $nullable . '|integer',
-            in_array($type, ['decimal', 'float', 'double'], true) => $req . $nullable . '|numeric',
-            in_array($type, ['date', 'datetime', 'datetimetz', 'timestamp', 'time', 'year'], true) => $req . $nullable . '|date',
-            $type === 'json' => $req . $nullable . '|array',
-            $type === 'enum' => [$req . $nullable, 'in:' . implode(',', $this->enumValues($raw))],
-            str_contains($raw, 'char') => $req . $nullable . '|string|max:' . $this->charLength($raw),
-            in_array($type, ['text', 'mediumtext', 'longtext'], true) => $req . $nullable . '|string',
-            default => $req . $nullable . '|string|max:255',
+            $type === 'boolean' || $raw === 'tinyint(1)' => $req.$nullable.'|boolean',
+            in_array($type, ['integer', 'bigint', 'mediumint', 'smallint', 'tinyint'], true) => $req.$nullable.'|integer',
+            in_array($type, ['decimal', 'float', 'double'], true) => $req.$nullable.'|numeric',
+            in_array($type, ['date', 'datetime', 'datetimetz', 'timestamp', 'time', 'year'], true) => $req.$nullable.'|date',
+            $type === 'json' => $req.$nullable.'|array',
+            $type === 'enum' => [$req.$nullable, 'in:'.implode(',', $this->enumValues($raw))],
+            str_contains($raw, 'char') => $req.$nullable.'|string|max:'.$this->charLength($raw),
+            in_array($type, ['text', 'mediumtext', 'longtext'], true) => $req.$nullable.'|string',
+            default => $req.$nullable.'|string|max:255',
         };
     }
 

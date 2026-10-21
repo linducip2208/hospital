@@ -30,7 +30,6 @@ use App\Models\HospitalBed;
 use App\Models\IcuMonitoring;
 use App\Models\InfectionSurveillance;
 use App\Models\InformedConsent;
-use App\Models\InsuranceClaim;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\LabTest;

@@ -7,8 +7,12 @@ use App\Models\Bill;
 use App\Models\Payment;
 use App\Services\BillingService;
 use App\Services\DocumentNumberService;
+use App\Services\JournalService;
+use App\Services\RefundService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -79,18 +83,18 @@ class PaymentController extends Controller
         // Legacy standalone payment payload remains supported for existing clients.
         $validated['invoice_number'] = app(DocumentNumberService::class)->next('legacy_invoice_api', 'INV', 5);
 
-        $payment = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+        $payment = DB::transaction(function () use ($validated) {
             $payment = Payment::create($validated);
             // Pembayaran tunai langsung tetap dijurnal agar laporan keuangan konsisten.
             // Best-effort: pembayaran tetap tercatat bila COA belum tersedia.
             if ((float) $payment->paid_amount > 0 && $payment->status === 'completed') {
                 try {
-                    app(\App\Services\JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran ' . $payment->invoice_number, [
-                        ['account_code' => app(\App\Services\BillingService::class)->cashAccount($payment->payment_method ?? 'cash'), 'debit' => (float) $payment->paid_amount],
+                    app(JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran '.$payment->invoice_number, [
+                        ['account_code' => app(BillingService::class)->cashAccount($payment->payment_method ?? 'cash'), 'debit' => (float) $payment->paid_amount],
                         ['account_code' => ['1200', '1-002'], 'credit' => (float) $payment->paid_amount],
                     ], $payment->invoice_number);
                 } catch (\RuntimeException $e) {
-                    \Illuminate\Support\Facades\Log::warning('Jurnal pembayaran legacy API dilewati: ' . $e->getMessage(), ['payment_id' => $payment->id]);
+                    Log::warning('Jurnal pembayaran legacy API dilewati: '.$e->getMessage(), ['payment_id' => $payment->id]);
                 }
             }
 
@@ -113,7 +117,7 @@ class PaymentController extends Controller
     {
         abort_unless($request->user()?->hasPermission('billing.manage'), 403);
         if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
-            return response()->json(['message' => 'Pembayaran ' . $payment->status . ' tidak boleh diubah langsung. Gunakan endpoint refund resmi.'], 422);
+            return response()->json(['message' => 'Pembayaran '.$payment->status.' tidak boleh diubah langsung. Gunakan endpoint refund resmi.'], 422);
         }
         $validated = $request->validate([
             'patient_id' => 'sometimes|exists:patients,id',
@@ -147,7 +151,7 @@ class PaymentController extends Controller
     {
         abort_unless(in_array(request()->user()?->role, ['admin', 'developer', 'finance'], true), 403);
         if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
-            return response()->json(['message' => 'Pembayaran ' . $payment->status . ' tidak boleh dihapus. Gunakan endpoint refund resmi.'], 422);
+            return response()->json(['message' => 'Pembayaran '.$payment->status.' tidak boleh dihapus. Gunakan endpoint refund resmi.'], 422);
         }
         $payment->delete();
 
@@ -161,7 +165,7 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'reason' => 'required|string|max:1000',
         ]);
-        $refund = app(\App\Services\RefundService::class)->process($payment, (float) $validated['amount'], $validated['reason']);
+        $refund = app(RefundService::class)->process($payment, (float) $validated['amount'], $validated['reason']);
 
         return response()->json($refund->load('payment'), 201);
     }

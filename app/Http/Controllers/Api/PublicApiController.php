@@ -127,7 +127,7 @@ class PublicApiController extends Controller
         }
 
         $contact = trim((string) ($validated['contact_phone'] ?? ''));
-        $notes = trim(trim((string) ($validated['notes'] ?? '')) . ($contact !== '' ? ' [Kontak: ' . $contact . ']' : ''));
+        $notes = trim(trim((string) ($validated['notes'] ?? '')).($contact !== '' ? ' [Kontak: '.$contact.']' : ''));
         $call = AmbulanceCall::create([
             'ambulance_id' => $ambulance->id,
             'patient_name' => $validated['patient_name'],

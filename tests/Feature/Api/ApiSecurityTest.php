@@ -2,7 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Appointment;
+use App\Models\Drug;
 use App\Models\Patient;
+use App\Models\Polyclinic;
+use App\Models\Queue;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +31,7 @@ class ApiSecurityTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->withHeader('Authorization', 'Bearer ' . $token);
+        return $this->withHeader('Authorization', 'Bearer '.$token);
     }
 
     public function test_modul_sensitif_dibatasi_per_peran(): void
@@ -59,13 +63,13 @@ class ApiSecurityTest extends TestCase
         $cashier = $this->staffToken('cashier', 'kasir2@hospital.test');
         $admin = $this->staffToken('admin', 'admin3@hospital.test');
 
-        $drug = \App\Models\Drug::factory()->create();
-        $patient = \App\Models\Patient::factory()->create();
+        $drug = Drug::factory()->create();
+        $patient = Patient::factory()->create();
 
         // Kasir tidak boleh hapus obat/pasien/appointment
         $this->as($cashier)->deleteJson("/api/v1/drugs/{$drug->id}")->assertForbidden();
         $this->as($cashier)->deleteJson("/api/v1/patients/{$patient->id}")->assertForbidden();
-        $appointment = \App\Models\Appointment::factory()->create();
+        $appointment = Appointment::factory()->create();
         $this->as($cashier)->deleteJson("/api/v1/appointments/{$appointment->id}")->assertForbidden();
 
         // Admin boleh hapus (soft delete → data masih bisa dipulihkan)
@@ -73,8 +77,8 @@ class ApiSecurityTest extends TestCase
         $this->assertSoftDeleted('drugs', ['id' => $drug->id]);
 
         // Antrian operasional boleh dihapus staf garis depan
-        $queue = \App\Models\Queue::create([
-            'polyclinic_id' => \App\Models\Polyclinic::create(['name' => 'Poli Umum', 'code' => 'PU-01'])->id,
+        $queue = Queue::create([
+            'polyclinic_id' => Polyclinic::create(['name' => 'Poli Umum', 'code' => 'PU-01'])->id,
             'patient_id' => $patient->id,
             'queue_number' => 'A-001',
         ]);

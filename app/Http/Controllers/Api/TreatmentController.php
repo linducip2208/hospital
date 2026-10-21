@@ -75,6 +75,7 @@ class TreatmentController extends Controller
     {
         abort_unless(in_array($request->user()?->role, ['admin', 'developer'], true), 403);
         $treatment->delete();
+
         return response()->json(null, 204);
     }
 }

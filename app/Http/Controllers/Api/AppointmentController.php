@@ -56,9 +56,9 @@ class AppointmentController extends Controller
 
         $appointments = $query->get()->map(fn ($a) => [
             'id' => $a->id,
-            'title' => $a->patient->name . ' - ' . ($a->doctor->name ?? ''),
-            'start' => $a->appointment_date?->format('Y-m-d') . 'T' . ($a->start_time?->format('H:i:s') ?? '00:00:00'),
-            'end' => $a->appointment_date?->format('Y-m-d') . 'T' . ($a->end_time?->format('H:i:s') ?? '23:59:00'),
+            'title' => $a->patient->name.' - '.($a->doctor->name ?? ''),
+            'start' => $a->appointment_date?->format('Y-m-d').'T'.($a->start_time?->format('H:i:s') ?? '00:00:00'),
+            'end' => $a->appointment_date?->format('Y-m-d').'T'.($a->end_time?->format('H:i:s') ?? '23:59:00'),
             'status' => $a->status,
             'backgroundColor' => match ($a->status) {
                 'scheduled' => '#3b82f6',
@@ -98,6 +98,7 @@ class AppointmentController extends Controller
     public function show(Appointment $appointment): JsonResponse
     {
         $appointment->load(['patient', 'doctor', 'treatment', 'medicalRecord', 'payments']);
+
         return response()->json($appointment);
     }
 
@@ -126,6 +127,7 @@ class AppointmentController extends Controller
     {
         abort_unless($request->user()?->hasPermission('appointments.manage'), 403);
         $appointment->delete();
+
         return response()->json(null, 204);
     }
 }

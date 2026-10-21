@@ -6,6 +6,7 @@ use App\Models\ApiToken;
 use App\Models\Patient;
 use App\Models\PatientApiToken;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Support\Str;
 class TokenController
 {
     private const DEFAULT_EXPIRY_DAYS = 30;
+
     private const MAX_EXPIRY_DAYS = 90;
 
     public function store(Request $request): JsonResponse
@@ -23,7 +25,7 @@ class TokenController
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'name' => ['required', 'string', 'max:100'],
-            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_EXPIRY_DAYS],
+            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_EXPIRY_DAYS],
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
@@ -91,7 +93,7 @@ class TokenController
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'name' => ['nullable', 'string', 'max:100'],
-            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_EXPIRY_DAYS],
+            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_EXPIRY_DAYS],
         ]);
 
         $patient = Patient::where('email', $credentials['email'])->first();
@@ -130,7 +132,7 @@ class TokenController
         ]), 201);
     }
 
-    private function expiry(Request|array $input): ?\Carbon\Carbon
+    private function expiry(Request|array $input): ?Carbon
     {
         $days = $input instanceof Request ? $input->get('expires_in_days') : ($input['expires_in_days'] ?? null);
 

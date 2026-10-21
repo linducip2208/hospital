@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Ambulance;
 use App\Models\Doctor;
 use App\Models\Polyclinic;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,7 +52,7 @@ class PublicApiTest extends TestCase
 
     public function test_panggilan_ambulans_dan_feedback_publik(): void
     {
-        \App\Models\Ambulance::create(['vehicle_number' => 'B-1234-AMB', 'status' => 'available']);
+        Ambulance::create(['vehicle_number' => 'B-1234-AMB', 'status' => 'available']);
         $this->postJson('/api/v1/public/ambulance-calls', [
             'patient_name' => 'Darurat', 'pickup_location' => 'Jl. Mawar 1',
             'contact_phone' => '0812999999',

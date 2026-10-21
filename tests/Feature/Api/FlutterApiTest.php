@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\ApiToken;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Drug;
@@ -31,7 +32,7 @@ class FlutterApiTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->withHeader('Authorization', 'Bearer ' . $token);
+        return $this->withHeader('Authorization', 'Bearer '.$token);
     }
 
     private function patientToken(Patient $patient, string $password): string
@@ -58,7 +59,7 @@ class FlutterApiTest extends TestCase
         $this->as($newToken)->getJson('/api/v1/patients')->assertOk();
 
         // Token kedaluwarsa ditolak (akses & refresh)
-        \App\Models\ApiToken::create([
+        ApiToken::create([
             'user_id' => $user->id, 'name' => 'old',
             'token_hash' => hash('sha256', 'expired-token-plain'),
             'expires_at' => now()->subDay(),

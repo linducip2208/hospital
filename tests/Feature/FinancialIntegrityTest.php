@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Bill;
+use App\Models\ChartOfAccount;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -17,9 +19,9 @@ class FinancialIntegrityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        $this->seed(PermissionSeeder::class);
         foreach (['1200' => 'Piutang', '1110' => 'Kas'] as $code => $name) {
-            \App\Models\ChartOfAccount::create([
+            ChartOfAccount::create([
                 'account_code' => $code, 'account_name' => $name,
                 'account_type' => 'asset', 'normal_balance' => 'debit', 'is_active' => true,
             ]);
@@ -41,7 +43,7 @@ class FinancialIntegrityTest extends TestCase
     {
         $this->app['auth']->forgetGuards();
 
-        return $this->withHeader('Authorization', 'Bearer ' . $token);
+        return $this->withHeader('Authorization', 'Bearer '.$token);
     }
 
     public function test_status_refunded_tidak_bisa_diset_langsung(): void

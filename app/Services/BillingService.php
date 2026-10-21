@@ -13,9 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class BillingService
 {
-    public function __construct(private JournalService $journal)
-    {
-    }
+    public function __construct(private JournalService $journal) {}
 
     public function addCharge(array $attributes): Charge
     {
@@ -85,7 +83,7 @@ class BillingService
         return DB::transaction(function () use ($bill, $attributes) {
             $bill = Bill::lockForUpdate()->findOrFail($bill->id);
             if (in_array($bill->status, ['cancelled', 'refunded'], true)) {
-                throw ValidationException::withMessages(['bill_id' => 'Tagihan sudah ' . $bill->status . ', tidak bisa dibayar.']);
+                throw ValidationException::withMessages(['bill_id' => 'Tagihan sudah '.$bill->status.', tidak bisa dibayar.']);
             }
             $amount = round((float) $attributes['amount'], 2);
             $balance = max(0, (float) $bill->patient_responsibility - (float) $bill->paid_amount);
@@ -143,7 +141,8 @@ class BillingService
         }
     }
 
-    public function cashAccount(string $method): array    {
+    public function cashAccount(string $method): array
+    {
         return match ($method) {
             'transfer', 'debit', 'credit', 'qris' => ['1120', '1-001'],
             default => ['1110', '1-001'],

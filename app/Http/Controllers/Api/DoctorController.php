@@ -52,6 +52,7 @@ class DoctorController extends Controller
     public function show(Doctor $doctor): JsonResponse
     {
         $doctor->load(['appointments.patient', 'medicalRecords']);
+
         return response()->json($doctor);
     }
 
@@ -78,6 +79,7 @@ class DoctorController extends Controller
     {
         abort_unless(in_array($request->user()?->role, ['admin', 'developer'], true), 403);
         $doctor->delete();
+
         return response()->json(null, 204);
     }
 }

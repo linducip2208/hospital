@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\MedicalRecord;
+use App\Models\Patient;
 use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PatientSelfController extends Controller
 {
-    private function patient(): \App\Models\Patient
+    private function patient(): Patient
     {
         $patient = Auth::guard('patient')->user();
         abort_unless($patient, 403, 'Hanya token pasien.');
