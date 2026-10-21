@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Http\Controllers\Concerns\ThrottlesLoginAttempts;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +12,8 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    use ThrottlesLoginAttempts;
+
     public function showLogin(): View
     {
         return view('portal.auth.login');
@@ -23,7 +26,11 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $email = $credentials['email'];
+        $ip = $request->ip() ?? 'unknown';
+
         if (Auth::guard('patient')->attempt($credentials, $request->boolean('remember'))) {
+            self::clearAttempts($email, $ip);
             $request->session()->regenerate();
 
             $patient = Auth::guard('patient')->user();
@@ -31,6 +38,9 @@ class AuthController extends Controller
 
             return redirect()->intended(route('portal.dashboard'));
         }
+
+        // Kunci 15 menit setelah 10x gagal; pesan tetap generik anti-enumerasi.
+        self::registerFailedAttempt($email, $ip);
 
         return back()->withErrors(['email' => 'Email atau password salah.'])->onlyInput('email');
     }
@@ -46,7 +56,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:patients,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $patient = Patient::create([

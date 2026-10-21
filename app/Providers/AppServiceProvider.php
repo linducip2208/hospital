@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Appointment;
+use App\Models\Bill;
+use App\Models\Charge;
+use App\Models\Dispensing;
 use App\Models\Drug;
 use App\Models\Emergency;
 use App\Models\Employee;
+use App\Models\Encounter;
 use App\Models\InsuranceClaim;
 use App\Models\JournalEntry;
 use App\Models\LabTest;
@@ -16,21 +20,17 @@ use App\Models\Payment;
 use App\Models\Prescription;
 use App\Models\Radiology;
 use App\Models\Referral;
+use App\Models\Refund;
 use App\Models\Salary;
 use App\Models\Surgery;
 use App\Models\User;
-use App\Models\Encounter;
-use App\Models\Dispensing;
-use App\Models\Charge;
-use App\Models\Bill;
-use App\Models\Refund;
 use App\Observers\ActivityObserver;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -75,6 +75,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute((int) env('LOGIN_RATE_LIMIT', 5))
                 ->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
+        // Registrasi akun publik: selalu per-IP (pendaftar belum punya akun,
+        // throttle per-user tidak berguna melawan spam bot).
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perMinute(5)->by('register|'.$request->ip());
         });
 
         Builder::macro('whereAny', function (array $columns, string $operator, mixed $value) {

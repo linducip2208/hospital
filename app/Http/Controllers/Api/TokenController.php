@@ -77,12 +77,28 @@ class TokenController
         return response()->json(null, 204);
     }
 
+    public function destroyAll(Request $request): JsonResponse
+    {
+        ApiToken::where('user_id', $request->user()->id)->delete();
+
+        return response()->json(null, 204);
+    }
+
     public function destroyPatientCurrent(Request $request): JsonResponse
     {
         $patient = Auth::guard('patient')->user();
         abort_unless($patient, 403);
         $hash = hash('sha256', (string) $request->bearerToken());
         PatientApiToken::where('token_hash', $hash)->where('patient_id', $patient->id)->delete();
+
+        return response()->json(null, 204);
+    }
+
+    public function destroyPatientAll(Request $request): JsonResponse
+    {
+        $patient = Auth::guard('patient')->user();
+        abort_unless($patient, 403);
+        PatientApiToken::where('patient_id', $patient->id)->delete();
 
         return response()->json(null, 204);
     }
@@ -115,7 +131,7 @@ class TokenController
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:patients,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // API juga wajib terpairing (respons JSON 403 bila belum) agar lisensi
         // tidak bisa dilewati lewat jalur API. Bypass dev/localhost tetap berlaku.
         $middleware->appendToGroup('api', RequirePair::class);
+        $middleware->appendToGroup('api', SecurityHeaders::class);
 
         $middleware->alias([
             'api.auth' => AuthenticateApi::class,
