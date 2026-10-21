@@ -84,6 +84,9 @@ class BillingService
     {
         return DB::transaction(function () use ($bill, $attributes) {
             $bill = Bill::lockForUpdate()->findOrFail($bill->id);
+            if (in_array($bill->status, ['cancelled', 'refunded'], true)) {
+                throw ValidationException::withMessages(['bill_id' => 'Tagihan sudah ' . $bill->status . ', tidak bisa dibayar.']);
+            }
             $amount = round((float) $attributes['amount'], 2);
             $balance = max(0, (float) $bill->patient_responsibility - (float) $bill->paid_amount);
             if ($amount <= 0 || $amount > $balance) {
@@ -140,8 +143,7 @@ class BillingService
         }
     }
 
-    private function cashAccount(string $method): array
-    {
+    public function cashAccount(string $method): array    {
         return match ($method) {
             'transfer', 'debit', 'credit', 'qris' => ['1120', '1-001'],
             default => ['1110', '1-001'],

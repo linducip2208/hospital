@@ -31,6 +31,11 @@ class RequirePair
             return $next($request);
         }
 
+        // Not paired (or invalid/tampered)
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return response()->json(['message' => 'Aplikasi belum terpairing lisensi. Selesaikan pairing di /__pair.'], 403);
+        }
+
         // Not paired (or invalid/tampered) — redirect to wizard
         return redirect()->to('/__pair');
     }
@@ -58,8 +63,8 @@ class RequirePair
             return true;
         }
 
-        // Localhost dev bypass
-        if (config('license.dev_bypass') && app()->environment('local')) {
+        // Localhost dev bypass (+ testing agar automated test tidak diblokir lisensi)
+        if (config('license.dev_bypass') && app()->environment(['local', 'testing'])) {
             $host = $request->getHost();
             if ($this->isDevHost($host)) {
                 return true;

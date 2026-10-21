@@ -48,6 +48,7 @@ Route::prefix('v1')->middleware(['api.auth', 'throttle:api'])->name('api.')->gro
 
     Route::apiResource('medical-records', MedicalRecordController::class);
     Route::apiResource('payments', PaymentController::class);
+    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
 
     Route::delete('auth/tokens/{token}', [TokenController::class, 'destroy'])
         ->name('tokens.destroy');

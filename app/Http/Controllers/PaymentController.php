@@ -47,7 +47,7 @@ class PaymentController extends Controller
             'bill_id' => 'nullable|exists:bills,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
-            'status' => 'required|in:pending,completed,cancelled,refunded',
+            'status' => 'required|in:pending,completed',
             'notes' => 'nullable|string',
         ]);
 
@@ -66,7 +66,22 @@ class PaymentController extends Controller
         $validated['paid_amount'] = $validated['status'] === 'completed' ? $validated['amount'] : 0;
         $validated['change_amount'] = 0;
 
-        Payment::create($validated);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $billing) {
+            $payment = Payment::create($validated);
+            // Pembayaran tunai langsung tetap dijurnal agar laporan keuangan konsisten.
+            // Best-effort: pembayaran tetap tercatat bila COA belum tersedia.
+            if ((float) $payment->paid_amount > 0) {
+                try {
+                    app(\App\Services\JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran ' . $payment->invoice_number, [
+                        ['account_code' => $billing->cashAccount($payment->payment_method ?? 'cash'), 'debit' => (float) $payment->paid_amount],
+                        ['account_code' => ['1200', '1-002'], 'credit' => (float) $payment->paid_amount],
+                    ], $payment->invoice_number);
+                } catch (\RuntimeException $e) {
+                    \Illuminate\Support\Facades\Log::warning('Jurnal pembayaran legacy dilewati: ' . $e->getMessage(), ['payment_id' => $payment->id]);
+                }
+            }
+        });
+
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dicatat.');
     }
 
@@ -79,21 +94,28 @@ class PaymentController extends Controller
 
     public function edit(Payment $payment): View
     {
+        $this->ensurePermission('billing.manage');
         $appointments = Appointment::with('patient')->orderBy('appointment_date', 'desc')->limit(500)->get();
         return view('payments.edit', compact('payment', 'appointments'));
     }
 
     public function update(Request $request, Payment $payment): RedirectResponse
     {
+        $this->ensurePermission('billing.manage');
         $validated = $request->validate([
             'appointment_id' => 'required|exists:appointments,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
-            'status' => 'required|in:pending,completed,cancelled,refunded',
+            'status' => 'required|in:pending,completed',
             'notes' => 'nullable|string',
         ]);
 
         $appointment = Appointment::findOrFail($validated['appointment_id']);
+
+        // Pembayaran final tidak boleh diubah langsung (anti pemalsuan status).
+        if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
+            return redirect()->route('payments.index')->with('error', 'Pembayaran ' . $payment->status . ' tidak boleh diubah langsung. Gunakan fitur refund resmi.');
+        }
 
         $validated['patient_id'] = $appointment->patient_id;
         $validated['subtotal'] = $validated['amount'];
@@ -108,6 +130,12 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): RedirectResponse
     {
+        $this->ensurePermission('billing.manage');
+        // Transaksi yang sudah lunas/dibatalkan/direfund tidak boleh dihapus —
+        // koreksi wajib lewat fitur refund resmi yang berjurnal.
+        if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
+            return redirect()->route('payments.index')->with('error', 'Pembayaran ' . $payment->status . ' tidak boleh dihapus. Gunakan fitur refund resmi.');
+        }
         $payment->delete();
         return redirect()->route('payments.index')->with('success', 'Pembayaran berhasil dihapus.');
     }

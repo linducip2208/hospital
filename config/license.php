@@ -57,7 +57,7 @@ return [
     | A banner is shown on every page when this is on.
     |
     */
-    'dev_bypass' => env('LICENSE_DEV_BYPASS', true),
+    'dev_bypass' => filter_var(env('LICENSE_DEV_BYPASS', false), FILTER_VALIDATE_BOOLEAN),
 
     /*
     |--------------------------------------------------------------------------

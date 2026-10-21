@@ -54,7 +54,7 @@ class PaymentController extends Controller
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
-            'status' => 'nullable|in:pending,completed,cancelled,refunded',
+            'status' => 'nullable|in:pending,completed',
             'notes' => 'nullable|string',
         ]);
 
@@ -68,6 +68,10 @@ class PaymentController extends Controller
             return response()->json($payment->load(['patient:id,name', 'appointment:id,appointment_date']), 201);
         }
 
+        if (in_array($validated['status'] ?? 'pending', ['cancelled', 'refunded'], true)) {
+            return response()->json(['message' => 'Status refunded/cancelled hanya lewat endpoint refund resmi.'], 422);
+        }
+
         $validated['discount'] ??= 0;
         $validated['tax'] ??= 0;
         $validated['amount'] = $validated['subtotal'] - $validated['discount'] + $validated['tax'];
@@ -75,7 +79,23 @@ class PaymentController extends Controller
         // Legacy standalone payment payload remains supported for existing clients.
         $validated['invoice_number'] = app(DocumentNumberService::class)->next('legacy_invoice_api', 'INV', 5);
 
-        $payment = Payment::create($validated);
+        $payment = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            $payment = Payment::create($validated);
+            // Pembayaran tunai langsung tetap dijurnal agar laporan keuangan konsisten.
+            // Best-effort: pembayaran tetap tercatat bila COA belum tersedia.
+            if ((float) $payment->paid_amount > 0 && $payment->status === 'completed') {
+                try {
+                    app(\App\Services\JournalService::class)->post('payment', $payment->id, 'Penerimaan pembayaran ' . $payment->invoice_number, [
+                        ['account_code' => app(\App\Services\BillingService::class)->cashAccount($payment->payment_method ?? 'cash'), 'debit' => (float) $payment->paid_amount],
+                        ['account_code' => ['1200', '1-002'], 'credit' => (float) $payment->paid_amount],
+                    ], $payment->invoice_number);
+                } catch (\RuntimeException $e) {
+                    \Illuminate\Support\Facades\Log::warning('Jurnal pembayaran legacy API dilewati: ' . $e->getMessage(), ['payment_id' => $payment->id]);
+                }
+            }
+
+            return $payment;
+        });
         $payment->load(['patient:id,name', 'appointment:id,appointment_date']);
 
         return response()->json($payment, 201);
@@ -92,6 +112,9 @@ class PaymentController extends Controller
     public function update(Request $request, Payment $payment): JsonResponse
     {
         abort_unless($request->user()?->hasPermission('billing.manage'), 403);
+        if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
+            return response()->json(['message' => 'Pembayaran ' . $payment->status . ' tidak boleh diubah langsung. Gunakan endpoint refund resmi.'], 422);
+        }
         $validated = $request->validate([
             'patient_id' => 'sometimes|exists:patients,id',
             'appointment_id' => 'nullable|exists:appointments,id',
@@ -100,7 +123,7 @@ class PaymentController extends Controller
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'sometimes|numeric|min:0',
             'payment_method' => 'nullable|in:cash,transfer,debit,credit,qris,card,insurance,other',
-            'status' => 'nullable|in:pending,completed,cancelled,refunded',
+            'status' => 'nullable|in:pending,completed',
             'notes' => 'nullable|string',
         ]);
 
@@ -123,8 +146,23 @@ class PaymentController extends Controller
     public function destroy(Payment $payment): JsonResponse
     {
         abort_unless(in_array(request()->user()?->role, ['admin', 'developer', 'finance'], true), 403);
+        if (in_array($payment->status, ['completed', 'cancelled', 'refunded'], true)) {
+            return response()->json(['message' => 'Pembayaran ' . $payment->status . ' tidak boleh dihapus. Gunakan endpoint refund resmi.'], 422);
+        }
         $payment->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function refund(Request $request, Payment $payment): JsonResponse
+    {
+        abort_unless($request->user()?->hasPermission('payments.refund'), 403);
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'reason' => 'required|string|max:1000',
+        ]);
+        $refund = app(\App\Services\RefundService::class)->process($payment, (float) $validated['amount'], $validated['reason']);
+
+        return response()->json($refund->load('payment'), 201);
     }
 }

@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', SecurityHeaders::class);
         $middleware->appendToGroup('web', RequirePair::class);
+        // API juga wajib terpairing (respons JSON 403 bila belum) agar lisensi
+        // tidak bisa dilewati lewat jalur API. Bypass dev/localhost tetap berlaku.
+        $middleware->appendToGroup('api', RequirePair::class);
 
         $middleware->alias([
             'api.auth' => AuthenticateApi::class,
